@@ -16,9 +16,11 @@ using Random = Unity.Mathematics.Random;
 public partial class BallPhysicsSystem : SystemBase
 {
     private EntityManager _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-    private static Random _rand = new Random(100);
+    private Random _rand = new Random(100);
     private BuildPhysicsWorld _buildPhysicsWorldSystem;
     private StepPhysicsWorld _stepPhysicsWorldSystem;
+    
+    // TODO: Handle all of this stuff in each Ball's UpdateSystem
     
     [BurstCompile]
     protected override void OnCreate()
@@ -31,8 +33,15 @@ public partial class BallPhysicsSystem : SystemBase
     [BurstCompile]
     protected override void OnStartRunning()
     {
-        var ballSetupJob = new BallSetupJob().ScheduleParallel();
-        ballSetupJob.Complete();
+        /*var ballSetupJob = new BallSetupJob
+        {
+            DeltaTime = Time.DeltaTime,
+            GlobalData = GetSingleton<GlobalData>(),
+            BasicSharedData = GetSingleton<BasicBallSharedData>(),
+            Rand = _rand
+            
+        }.ScheduleParallel();
+        ballSetupJob.Complete();*/
         this.RegisterPhysicsRuntimeSystemReadWrite();
     }
     
@@ -64,7 +73,7 @@ public partial class BallPhysicsSystem : SystemBase
     {
         public ComponentDataFromEntity<Translation> TranslationComponentData;
         public ComponentDataFromEntity<PhysicsVelocity> VelocityComponentData;
-        public ComponentDataFromEntity<Speed> SpeedComponentData;
+        //public ComponentDataFromEntity<Speed> SpeedComponentData;
         //public PhysicsWorld MyPhysicsWorld;
         
         public void Execute(CollisionEvent collisionEvent)
@@ -80,21 +89,12 @@ public partial class BallPhysicsSystem : SystemBase
             //Debug.DrawRay(collisionEvent.CalculateDetails(ref MyPhysicsWorld).AverageContactPointPosition, normal, Color.blue);
             //Debug.DrawRay(TranslationComponentData[collisionEvent.EntityA].Value, math.normalize(reflectedVelocity), Color.green);
 
-            pv.Linear = reflectedVelocity * SpeedComponentData[collisionEvent.EntityA].Value;
+            //pv.Linear = reflectedVelocity * SpeedComponentData[collisionEvent.EntityA].Value;
             ; /*new float3(
                 math.normalize(pv.Linear).x * math.cos(randomAngle) -
                 math.normalize(pv.Linear).y * math.sin(randomAngle),
                 math.normalize(pv.Linear).y * math.cos(randomAngle) +
                 math.normalize(pv.Linear).x * math.sin(randomAngle), 0);*/
-        }
-    }
-    
-    private partial struct BallSetupJob : IJobEntity
-    {
-        void Execute(ref PhysicsVelocity pv, in Speed speed)
-        {
-            float randomAngle = math.radians(_rand.NextInt(1, 361));
-            pv.Linear = new float3(math.cos(randomAngle) * speed.Value, math.sin(randomAngle) * speed.Value, 0);
         }
     }
 }
