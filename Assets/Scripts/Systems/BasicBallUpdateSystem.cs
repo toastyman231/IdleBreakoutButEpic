@@ -1,5 +1,6 @@
 ﻿using System;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -29,7 +30,19 @@ namespace Systems
         {
             return;
         }
-        
+
+        public NativeArray<int> GetBallDataByType(BallType ballType)
+        {
+            switch (ballType)
+            {
+                case BallType.BasicBall:
+                    BasicBallSharedData ballData = GetSingleton<BasicBallSharedData>();
+                    return new NativeArray<int>(new []{ballData.Speed, ballData.Power, ballData.Cost, ballData.Count}, Allocator.Temp);
+                default:
+                    return new NativeArray<int>(new int[] { }, Allocator.Temp);
+            }
+        }
+
         [BurstCompile]
         public void InvokeUpdateSharedDataEvent(int power = 0, int speed = 0, int cost = 0, int count = 0)
         {
@@ -54,7 +67,7 @@ namespace Systems
             }.ScheduleParallel();
             
             ballDataJob.Complete();
-            Debug.Log(GetSingleton<BasicBallSharedData>().Count);
+            //Debug.Log(GetSingleton<BasicBallSharedData>().Count);
         }
         
         [BurstCompile]

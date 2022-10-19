@@ -8,5 +8,5 @@ using Unity.Mathematics;
 public struct PrefabComponent : IComponentData
 {
     public Entity BasicBallPrefab;
-
+    public Entity BrickPrefab;
 }
