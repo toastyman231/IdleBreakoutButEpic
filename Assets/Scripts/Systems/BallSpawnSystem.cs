@@ -51,17 +51,21 @@ public partial class BallSpawnSystem : SystemBase
                         .CalculateEntityCount();
                     if (currentCount > 0)
                     {
-                        BasicBallSharedData currentData = EntityManager.GetComponentData<BasicBallSharedData>(
-                            EntityManager.CreateEntityQuery(ComponentType.ReadOnly<BallTag>()).ToEntityArray(Allocator.Temp)[0]);
                         EntityManager.Instantiate(_basicBallPrefab, numToSpawn[i], Allocator.Temp);
-                        World.GetOrCreateSystem<BallSharedDataUpdateSystem>()
-                            .SetBallData(BallType.BasicBall, false, currentData.Power, currentData.Speed, currentData.Cost, currentCount + numToSpawn[i]);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in BallTag tag) =>
+                        {
+                            sharedData.Count = currentCount + amount;
+                        }).ScheduleParallel();
                     }
                     else
                     {
                         EntityManager.Instantiate(_basicBallPrefab, numToSpawn[i], Allocator.Temp);
-                        World.GetOrCreateSystem<BallSharedDataUpdateSystem>()
-                            .SetBallData(BallType.BasicBall, false, -1, -1, -1, currentCount + numToSpawn[i]);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in BallTag tag) =>
+                        {
+                            sharedData.Count += amount;
+                        }).ScheduleParallel();
                     }
                     break;
                 case BallType.PlasmaBall:
@@ -71,17 +75,24 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         Entity plasmaEntity = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlasmaTag>())
                             .ToEntityArray(Allocator.Temp)[0];
-                        BasicBallSharedData currentData = EntityManager.GetComponentData<BasicBallSharedData>(plasmaEntity);
-                        PlasmaBallSharedData plasmaData = EntityManager.GetComponentData<PlasmaBallSharedData>(plasmaEntity);
+                        PlasmaBallSharedData currentPlasma = EntityManager.GetComponentData<PlasmaBallSharedData>(plasmaEntity);
+
                         EntityManager.Instantiate(_plasmaBallPrefab, numToSpawn[i], Allocator.Temp);
-                        World.GetOrCreateSystem<BallSharedDataUpdateSystem>()
-                            .SetBallData(BallType.PlasmaBall, false, currentData.Power, currentData.Speed, currentData.Cost, currentCount + numToSpawn[i], plasmaData.Range);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, ref PlasmaBallSharedData plasmaData, in PlasmaTag tag) =>
+                        {
+                            sharedData.Count = currentCount + amount;
+                            plasmaData.Range = currentPlasma.Range;
+                        }).ScheduleParallel();
                     }
                     else
                     {
                         EntityManager.Instantiate(_plasmaBallPrefab, numToSpawn[i], Allocator.Temp);
-                        World.GetOrCreateSystem<BallSharedDataUpdateSystem>()
-                            .SetBallData(BallType.PlasmaBall, false, -1, -1, -1, currentCount + numToSpawn[i], -1);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in PlasmaTag tag) =>
+                        {
+                            sharedData.Count = currentCount + amount;
+                        }).ScheduleParallel();
                     }
                     break;
                 case BallType.SniperBall:
@@ -89,17 +100,21 @@ public partial class BallSpawnSystem : SystemBase
                         .CalculateEntityCount();
                     if (currentCount > 0)
                     {
-                        BasicBallSharedData currentData = EntityManager.GetComponentData<BasicBallSharedData>(
-                            EntityManager.CreateEntityQuery(ComponentType.ReadOnly<SniperTag>()).ToEntityArray(Allocator.Temp)[0]);
                         EntityManager.Instantiate(_sniperBallPrefab, numToSpawn[i], Allocator.Temp);
-                        World.GetOrCreateSystem<BallSharedDataUpdateSystem>()
-                            .SetBallData(BallType.SniperBall, false, currentData.Power, currentData.Speed, currentData.Cost, currentCount + numToSpawn[i]);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in SniperTag tag) =>
+                        {
+                            sharedData.Count = currentCount + amount;
+                        }).ScheduleParallel();
                     }
                     else
                     {
                         EntityManager.Instantiate(_sniperBallPrefab, numToSpawn[i], Allocator.Temp);
-                        World.GetOrCreateSystem<BallSharedDataUpdateSystem>()
-                            .SetBallData(BallType.SniperBall, false, -1, -1, -1, currentCount + numToSpawn[i]);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in SniperTag tag) =>
+                        {
+                            sharedData.Count = currentCount + amount;
+                        }).ScheduleParallel();
                     }
                     break;
                 default:

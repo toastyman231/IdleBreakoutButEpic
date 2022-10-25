@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using Systems;
 using Tags;
 using Unity.Collections;
@@ -87,36 +88,47 @@ public class BallShopControl : MonoBehaviour
 
     private Action UpdateCosts(string ballType)
     {
-        int cost = 0;
+        string cost = "0";
+        BigInteger newCost = BigInteger.Zero;
 
         switch (ballType)
         {
             case "BasicBall":
-                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(
-                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
-                        ComponentType.ReadOnly<BallTag>()).ToEntityArray(Allocator.Temp)[0]).Cost;
-                cost = Mathf.CeilToInt(cost + cost * 0.5f);
-                //Debug.Log(cost.NumberFormat());
-                _buyButtons[0].text = "$" + cost.NumberFormat();
-                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.BasicBall, false, -1, -1, cost, -1);
+                var basicBallQuery = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<BallTag>());
+                var basicBalls = basicBallQuery.ToEntityArray(Allocator.Temp);
+                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(basicBalls[^1]).Cost.ToString();
+                newCost = BigInteger.Add(BigInteger.Parse(cost),
+                    ReturnCostAsBigInteger(BigInteger.Parse(cost), 0.5f));
+                _buyButtons[0].text = "$" + newCost.NumberFormat();
+                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.BasicBall, false, -1, -1, newCost.ToString(), -1);
             case "PlasmaBall":
-                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(
-                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
-                        ComponentType.ReadOnly<PlasmaTag>()).ToEntityArray(Allocator.Temp)[0]).Cost;
-                cost = Mathf.CeilToInt(cost + cost * 0.4f);
-                _buyButtons[1].text = "$" + cost.NumberFormat();
-                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.PlasmaBall, false, -1, -1, cost, -1, -1);
+                var plasmaBallQuery = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PlasmaTag>());
+                var plasmaBalls = plasmaBallQuery.ToEntityArray(Allocator.Temp);
+                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(plasmaBalls[^1]).Cost.ToString();
+                newCost = BigInteger.Add(BigInteger.Parse(cost),
+                    ReturnCostAsBigInteger(BigInteger.Parse(cost), 0.4f));
+                _buyButtons[1].text = "$" + newCost.NumberFormat();
+                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.PlasmaBall, false, -1, -1, newCost.ToString(), -1, -1);
             case "SniperBall":
-                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(
-                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
-                        ComponentType.ReadOnly<SniperTag>()).ToEntityArray(Allocator.Temp)[0]).Cost;
-                cost = (int) Mathf.Floor(cost * 1.35f) + 1;
-                //Debug.Log(cost.NumberFormat());
-                _buyButtons[2].text = "$" + cost.NumberFormat();
-                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.SniperBall, false, -1, -1, cost, -1);
+                var sniperBallQuery = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<SniperTag>());
+                var sniperBalls = sniperBallQuery.ToEntityArray(Allocator.Temp);
+                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(sniperBalls[^1]).Cost.ToString();
+                newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.35f);
+                _buyButtons[2].text = "$" + newCost.NumberFormat();
+                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.SniperBall, false, -1, -1, newCost.ToString(), -1);
             default:
                 return () => Debug.Log("Unrecognized ball type!");
         }
+    }
+
+    private BigInteger ReturnCostAsBigInteger(BigInteger cost, float mult)
+    {
+        float dCost = (float)cost;
+        int result = Mathf.CeilToInt(dCost * mult);
+        return new BigInteger(result);
     }
 
     // Update is called once per frame

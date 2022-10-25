@@ -74,6 +74,7 @@ public partial class BallPhysicsSystem : SystemBase
             Translations = GetComponentDataFromEntity<Translation>(),
             Velocities = GetComponentDataFromEntity<PhysicsVelocity>(),
             BallDatas = GetComponentDataFromEntity<BasicBallSharedData>(),
+            PlasmaData = GetComponentDataFromEntity<PlasmaBallSharedData>(),
             BrickDatas = GetComponentDataFromEntity<BrickData>(),
             GlobalDataEventQueue = globalDataEventQueueParallelWriter,
             LevelOverEventQueue = levelOverEventQueueParallelWriter
@@ -126,6 +127,7 @@ public partial class BallPhysicsSystem : SystemBase
         public ComponentDataFromEntity<Translation> Translations;
         public ComponentDataFromEntity<PhysicsVelocity> Velocities;
         public ComponentDataFromEntity<BasicBallSharedData> BallDatas;
+        public ComponentDataFromEntity<PlasmaBallSharedData> PlasmaData;
         public ComponentDataFromEntity<BrickData> BrickDatas;
 
         public NativeQueue<GlobalDataEventArgs>.ParallelWriter GlobalDataEventQueue;
@@ -195,7 +197,7 @@ public partial class BallPhysicsSystem : SystemBase
             if (Manager.HasComponent<PlasmaTag>(ballEntity))
             {
                 float3 pos = brickData.Position;
-                PlasmaBallSharedData plasmaData = Manager.GetComponentData<PlasmaBallSharedData>(ballEntity);
+                PlasmaBallSharedData plasmaData = PlasmaData[ballEntity];
                 
                 NativeList<DistanceHit> hits = new NativeList<DistanceHit>(Allocator.Temp);
                 
@@ -208,7 +210,7 @@ public partial class BallPhysicsSystem : SystemBase
                     
                     int damage = Mathf.Clamp(Mathf.RoundToInt(ballData.Power / 4f), 1, ballData.Power);
                     //Debug.Log(string.Format("{0}", hit.Entity.Index));
-                    BrickData hitBrick = Manager.GetComponentData<BrickData>(hit.Entity);
+                    BrickData hitBrick = BrickDatas[hit.Entity];
                     
                     int brickHealth = hitBrick.Health - damage * GlobalData.PowerMultiplier;
                     CommandBuffer.SetComponent(hit.Entity, new BrickData{ Health = brickHealth, Position = brickData.Position });

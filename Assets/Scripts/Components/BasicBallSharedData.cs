@@ -11,6 +11,6 @@ public struct BasicBallSharedData : IComponentData
     public FixedString64Bytes BallName;
     public int Power;
     public int Speed;
-    public int Cost;
+    public FixedString64Bytes Cost;
     public int Count;
 }

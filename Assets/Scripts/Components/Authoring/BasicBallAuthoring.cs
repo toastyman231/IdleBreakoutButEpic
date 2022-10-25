@@ -9,7 +9,7 @@ public class BasicBallAuthoring : MonoBehaviour, IConvertGameObjectToEntity
     public string BallNameAuth;
     public int PowerAuth;
     public int SpeedAuth;
-    public int CostAuth;
+    public string CostAuth;
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
