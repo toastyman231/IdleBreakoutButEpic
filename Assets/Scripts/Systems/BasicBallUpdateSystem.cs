@@ -1,7 +1,9 @@
 ﻿using System;
+using Tags;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -10,90 +12,144 @@ namespace Systems
     [BurstCompile]
     public partial class BallSharedDataUpdateSystem : SystemBase
     {
-        private event EventHandler<SharedDataArgs> UpdateSharedDataEvent;
-        
-        [BurstCompile]
-        protected override void OnCreate()
-        {
-            base.OnCreate();
-            UpdateSharedDataEvent += UpdateBasicBallData;
-        }
-        
-        [BurstCompile]
-        protected override void OnDestroy()
-        {
-            UpdateSharedDataEvent -= UpdateBasicBallData;
-        }
-        
         [BurstCompile]
         protected override void OnUpdate()
         {
             return;
         }
-
-        public NativeArray<int> GetBallDataByType(BallType ballType)
-        {
-            switch (ballType)
-            {
-                case BallType.BasicBall:
-                    BasicBallSharedData ballData = GetSingleton<BasicBallSharedData>();
-                    return new NativeArray<int>(new []{ballData.Speed, ballData.Power, ballData.Cost, ballData.Count}, Allocator.Temp);
-                default:
-                    return new NativeArray<int>(new int[] { }, Allocator.Temp);
-            }
-        }
-
+        
         [BurstCompile]
-        public void InvokeUpdateSharedDataEvent(int power = 0, int speed = 0, int cost = 0, int count = 0)
+        public void SetBallData(BallType type, bool update, params int[] data)
         {
-            UpdateSharedDataEvent?.Invoke(this, new SharedDataArgs
-            {
-                NewPower = power,
-                NewSpeed = speed,
-                NewCost = cost,
-                NewCount = count
-            });
-        }
-    
-        [BurstCompile]
-        private void UpdateBasicBallData(object sender, SharedDataArgs args)
-        {
-            var ballDataJob = new UpdateBallDataJob
-            {
-                NewPower = args.NewPower,
-                NewSpeed = args.NewSpeed,
-                NewCost = args.NewCost,
-                NewCount = args.NewCount
-            }.ScheduleParallel();
+            JobHandle ballDataJob;
             
+            switch (type)
+            {
+                default:
+                    ballDataJob = new SetBasicBallDataJob
+                    {
+                        Update = update,
+                        NewPower = data[0],
+                        NewSpeed = data[1],
+                        NewCost = data[2],
+                        NewCount = data[3]
+                    }.ScheduleParallel();
+                    break;
+                case BallType.PlasmaBall:
+                    ballDataJob = new SetPlasmaBallDataJob
+                    {
+                        Update = update,
+                        NewPower = data[0],
+                        NewSpeed = data[1],
+                        NewCost = data[2],
+                        NewCount = data[3],
+                        NewRange = data[4]
+                    }.ScheduleParallel();
+                    break;
+                case BallType.SniperBall:
+                    ballDataJob = new SetSniperBallDataJob
+                    {
+                        Update = update,
+                        NewPower = data[0],
+                        NewSpeed = data[1],
+                        NewCost = data[2],
+                        NewCount = data[3]
+                    }.ScheduleParallel();
+                    break;
+            }
+
             ballDataJob.Complete();
             //Debug.Log(GetSingleton<BasicBallSharedData>().Count);
         }
-        
+
         [BurstCompile]
-        private partial struct UpdateBallDataJob : IJobEntity
+        private partial struct SetBasicBallDataJob : IJobEntity
         {
             public int NewPower;
             public int NewSpeed;
             public int NewCost;
             public int NewCount;
+            public bool Update;
             
             [BurstCompile]
-            void Execute(ref BasicBallSharedData ballSharedData)
+            void Execute(ref BasicBallSharedData ballSharedData, in BallTag tag)
             {
-                ballSharedData.Power = NewPower;
-                ballSharedData.Speed = NewSpeed;
-                ballSharedData.Cost = NewCost;
-                ballSharedData.Count = NewCount;
+                if (Update)
+                {
+                    if (NewPower >= 0) ballSharedData.Power += NewPower;
+                    if (NewSpeed >= 0) ballSharedData.Speed += NewSpeed;
+                    if (NewCost >= 0) ballSharedData.Cost += NewCost;
+                    if (NewCount >= 0) ballSharedData.Count += NewCount;
+                }
+                else
+                {
+                    if (NewPower >= 0) ballSharedData.Power = NewPower;
+                    if (NewSpeed >= 0) ballSharedData.Speed = NewSpeed;
+                    if (NewCost >= 0) ballSharedData.Cost = NewCost;
+                    if (NewCount >= 0) ballSharedData.Count = NewCount;
+                }
             }
         }
-    }
-    
-    public class SharedDataArgs : EventArgs
-    {
-        public int NewPower;
-        public int NewSpeed;
-        public int NewCost;
-        public int NewCount;
+
+        [BurstCompile]
+        private partial struct SetPlasmaBallDataJob : IJobEntity
+        {
+            public int NewPower;
+            public int NewSpeed;
+            public int NewCost;
+            public int NewCount;
+            public int NewRange;
+            public bool Update;
+
+            [BurstCompile]
+            void Execute(ref BasicBallSharedData ballSharedData, ref PlasmaBallSharedData plasmaSharedData, in PlasmaTag tag)
+            {
+                if (Update)
+                {
+                    if (NewPower >= 0) ballSharedData.Power += NewPower;
+                    if (NewSpeed >= 0) ballSharedData.Speed += NewSpeed;
+                    if (NewCost >= 0) ballSharedData.Cost += NewCost;
+                    if (NewCount >= 0) ballSharedData.Count += NewCount;
+                    if (NewRange >= 0) plasmaSharedData.Range += NewRange;
+                }
+                else
+                {
+                    if (NewPower >= 0) ballSharedData.Power = NewPower;
+                    if (NewSpeed >= 0) ballSharedData.Speed = NewSpeed;
+                    if (NewCost >= 0) ballSharedData.Cost = NewCost;
+                    if (NewCount >= 0) ballSharedData.Count = NewCount;
+                    if (NewRange >= 0) plasmaSharedData.Range = NewRange;
+                }
+            }
+        }
+        
+        [BurstCompile]
+        private partial struct SetSniperBallDataJob : IJobEntity
+        {
+            public int NewPower;
+            public int NewSpeed;
+            public int NewCost;
+            public int NewCount;
+            public bool Update;
+            
+            [BurstCompile]
+            void Execute(ref BasicBallSharedData ballSharedData, in SniperTag tag)
+            {
+                if (Update)
+                {
+                    if (NewPower >= 0) ballSharedData.Power += NewPower;
+                    if (NewSpeed >= 0) ballSharedData.Speed += NewSpeed;
+                    if (NewCost >= 0) ballSharedData.Cost += NewCost;
+                    if (NewCount >= 0) ballSharedData.Count += NewCount;
+                }
+                else
+                {
+                    if (NewPower >= 0) ballSharedData.Power = NewPower;
+                    if (NewSpeed >= 0) ballSharedData.Speed = NewSpeed;
+                    if (NewCost >= 0) ballSharedData.Cost = NewCost;
+                    if (NewCount >= 0) ballSharedData.Count = NewCount;
+                }
+            }
+        }
     }
 }

@@ -4,8 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [Serializable, GenerateAuthoringComponent]
-public struct BrickData : IComponentData
+public struct PlasmaBallSharedData : IComponentData
 {
-    public int Health;
-    public float3 Position;
+    public int Range;
 }

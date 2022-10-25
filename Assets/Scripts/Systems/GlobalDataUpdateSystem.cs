@@ -94,5 +94,7 @@ public enum Field
 {
     MONEY,
     LEVEL,
-    BRICKS
+    BRICKS,
+    POWER,
+    SPEED
 }

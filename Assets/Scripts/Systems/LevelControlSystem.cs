@@ -68,11 +68,17 @@ public partial class LevelControlSystem : SystemBase
     public void LoadLevel(float3[] brickPositions)
     {
         var prefab = GetSingleton<PrefabComponent>().BrickPrefab;
+        var globalData = GetSingleton<GlobalData>();
 
         foreach (var position in brickPositions)
         {
             Entity entity = EntityManager.Instantiate(prefab);
             EntityManager.SetComponentData<Translation>(entity, new Translation{Value = position});
+            EntityManager.SetComponentData<BrickData>(entity, new BrickData
+            {
+                Health = globalData.CurrentLevel,
+                Position = position
+            });
         }
         
         World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = brickPositions.Length});

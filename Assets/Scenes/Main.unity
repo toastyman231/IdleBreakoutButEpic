@@ -399,7 +399,6 @@ GameObject:
   - component: {fileID: 550263671}
   - component: {fileID: 550263672}
   - component: {fileID: 550263669}
-  - component: {fileID: 550263668}
   m_Layer: 0
   m_Name: BallData
   m_TagString: Untagged
@@ -422,22 +421,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &550263668
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 550263666}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 808eb6562c2516848b4a65e7644bfbeb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BallNameAuth: Basic Ball
-  PowerAuth: 1
-  SpeedAuth: 20
-  CostAuth: 25
 --- !u!114 &550263669
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -485,6 +468,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BasicBallPrefab: {fileID: 1900180632167706210, guid: ce16a180d4dfc224394a4778eb82335c,
+    type: 3}
+  PlasmaBallPrefab: {fileID: 1900180632167706210, guid: a21a24179fd72174189451b9f11e0c5c,
+    type: 3}
+  SniperBallPrefab: {fileID: 1900180632167706210, guid: 3204957f3a8f242489e2e18f79d90fca,
     type: 3}
   BrickPrefab: {fileID: 3244115376689041262, guid: 5d847adfb32bcc24297d4ff210da9101,
     type: 3}

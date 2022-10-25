@@ -8,5 +8,4 @@ using Unity.Mathematics;
 [GenerateAuthoringComponent]
 public struct BallTag : IComponentData
 {
-    public BallType Type;
 }

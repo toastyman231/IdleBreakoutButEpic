@@ -270,6 +270,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Health: 3
+  Position:
+    x: 0
+    y: 0
+    z: 0
 --- !u!114 &3244115376689041303
 MonoBehaviour:
   m_ObjectHideFlags: 0
