@@ -84,6 +84,9 @@ public class BrickLocationSaver : EditorWindow
             Debug.Log("Must enter Layout Name!");
             return;
         }
+        
+        _world = World.DefaultGameObjectInjectionWorld;
+        _world.GetOrCreateSystem<LevelControlSystem>().UnloadLevel();
 
         BrickPositionData brickPositions = Resources.Load<BrickPositionData>("Brick Layouts/" + layoutName);
         
@@ -93,7 +96,6 @@ public class BrickLocationSaver : EditorWindow
             return;
         }
         
-        _world = World.DefaultGameObjectInjectionWorld;
         _world.GetOrCreateSystem<LevelControlSystem>().LoadLevel(brickPositions.positions);
     }
 }

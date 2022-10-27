@@ -5,6 +5,8 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Mathematics;
+using Unity.Physics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -33,7 +35,9 @@ namespace Systems
                         NewPower = (int) data[0],
                         NewSpeed = (int) data[1],
                         NewCost = (string) data[2],
-                        NewCount = (int) data[3]
+                        NewCount = (int) data[3],
+                        DeltaTime = Time.DeltaTime,
+                        GlobalData = GetSingleton<GlobalData>()
                     }.ScheduleParallel();
                     break;
                 case BallType.PlasmaBall:
@@ -44,7 +48,9 @@ namespace Systems
                         NewSpeed = (int) data[1],
                         NewCost = (string) data[2],
                         NewCount = (int) data[3],
-                        NewRange = (int) data[4]
+                        NewRange = (int) data[4],
+                        DeltaTime = Time.DeltaTime,
+                        GlobalData = GetSingleton<GlobalData>()
                     }.ScheduleParallel();
                     break;
                 case BallType.SniperBall:
@@ -54,7 +60,9 @@ namespace Systems
                         NewPower = (int) data[0],
                         NewSpeed = (int) data[1],
                         NewCost = (string) data[2],
-                        NewCount = (int) data[3]
+                        NewCount = (int) data[3],
+                        DeltaTime = Time.DeltaTime,
+                        GlobalData = GetSingleton<GlobalData>()
                     }.ScheduleParallel();
                     break;
             }
@@ -66,6 +74,8 @@ namespace Systems
         //[BurstCompile]
         private partial struct SetBasicBallDataJob : IJobEntity
         {
+            public float DeltaTime;
+            public GlobalData GlobalData;
             public int NewPower;
             public int NewSpeed;
             public FixedString64Bytes NewCost;
@@ -73,12 +83,17 @@ namespace Systems
             public bool Update;
             
             //[BurstCompile]
-            void Execute(ref BasicBallSharedData ballSharedData, in BallTag tag)
+            void Execute(ref BasicBallSharedData ballSharedData, ref PhysicsVelocity pv, in BallTag tag)
             {
                 if (Update)
                 {
                     if (NewPower >= 0) ballSharedData.Power += NewPower;
-                    if (NewSpeed >= 0) ballSharedData.Speed += NewSpeed;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed += NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
                     if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0) 
                         ballSharedData.Cost = BigInteger.Add(BigInteger.Parse(ballSharedData.Cost.ToString()), 
                             BigInteger.Parse(NewCost.ToString())).ToString();
@@ -87,7 +102,12 @@ namespace Systems
                 else
                 {
                     if (NewPower >= 0) ballSharedData.Power = NewPower;
-                    if (NewSpeed >= 0) ballSharedData.Speed = NewSpeed;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed = NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
                     if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0)
                         ballSharedData.Cost = NewCost;
                     if (NewCount >= 0) ballSharedData.Count = NewCount;
@@ -98,6 +118,8 @@ namespace Systems
         //[BurstCompile]
         private partial struct SetPlasmaBallDataJob : IJobEntity
         {
+            public float DeltaTime;
+            public GlobalData GlobalData;
             public int NewPower;
             public int NewSpeed;
             public FixedString64Bytes NewCost;
@@ -106,12 +128,17 @@ namespace Systems
             public bool Update;
 
             //[BurstCompile]
-            void Execute(ref BasicBallSharedData ballSharedData, ref PlasmaBallSharedData plasmaSharedData, in PlasmaTag tag)
+            void Execute(ref BasicBallSharedData ballSharedData, ref PlasmaBallSharedData plasmaSharedData, ref PhysicsVelocity pv, in PlasmaTag tag)
             {
                 if (Update)
                 {
                     if (NewPower >= 0) ballSharedData.Power += NewPower;
-                    if (NewSpeed >= 0) ballSharedData.Speed += NewSpeed;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed += NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
                     if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0) 
                         ballSharedData.Cost = BigInteger.Add(BigInteger.Parse(ballSharedData.Cost.ToString()), 
                             BigInteger.Parse(NewCost.ToString())).ToString();
@@ -121,7 +148,12 @@ namespace Systems
                 else
                 {
                     if (NewPower >= 0) ballSharedData.Power = NewPower;
-                    if (NewSpeed >= 0) ballSharedData.Speed = NewSpeed;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed = NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
                     if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0)
                         ballSharedData.Cost = NewCost;
                     if (NewCount >= 0) ballSharedData.Count = NewCount;
@@ -133,6 +165,8 @@ namespace Systems
         //[BurstCompile]
         private partial struct SetSniperBallDataJob : IJobEntity
         {
+            public float DeltaTime;
+            public GlobalData GlobalData;
             public int NewPower;
             public int NewSpeed;
             public FixedString64Bytes NewCost;
@@ -140,12 +174,17 @@ namespace Systems
             public bool Update;
             
             //[BurstCompile]
-            void Execute(ref BasicBallSharedData ballSharedData, in SniperTag tag)
+            void Execute(ref BasicBallSharedData ballSharedData, ref PhysicsVelocity pv, in SniperTag tag)
             {
                 if (Update)
                 {
                     if (NewPower >= 0) ballSharedData.Power += NewPower;
-                    if (NewSpeed >= 0) ballSharedData.Speed += NewSpeed;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed += NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
                     if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0) 
                         ballSharedData.Cost = BigInteger.Add(BigInteger.Parse(ballSharedData.Cost.ToString()), 
                             BigInteger.Parse(NewCost.ToString())).ToString();
@@ -154,7 +193,12 @@ namespace Systems
                 else
                 {
                     if (NewPower >= 0) ballSharedData.Power = NewPower;
-                    if (NewSpeed >= 0) ballSharedData.Speed = NewSpeed;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed = NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
                     if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0)
                         ballSharedData.Cost = NewCost;
                     if (NewCount >= 0) ballSharedData.Count = NewCount;

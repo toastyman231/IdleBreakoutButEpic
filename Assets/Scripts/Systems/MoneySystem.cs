@@ -14,7 +14,8 @@ public partial class MoneySystem : SystemBase
     {
         base.OnCreate();
         //TODO: This is for testing, remove this
-        Money = BigInteger.Parse("9999999999990000000000000000");
+        //9999999999990000000000000000
+        Money = BigInteger.Parse("0");
     }
 
     protected override void OnUpdate()

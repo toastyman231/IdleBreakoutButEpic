@@ -7,6 +7,7 @@ using UnityEngine;
 public class BasicBallAuthoring : MonoBehaviour, IConvertGameObjectToEntity
 {
     public string BallNameAuth;
+    public string BallDescAuth;
     public int PowerAuth;
     public int SpeedAuth;
     public string CostAuth;
@@ -16,6 +17,7 @@ public class BasicBallAuthoring : MonoBehaviour, IConvertGameObjectToEntity
         dstManager.AddComponentData(entity, new BasicBallSharedData
         {
             BallName = BallNameAuth,
+            BallDesc = BallDescAuth,
             Power = PowerAuth,
             Speed = SpeedAuth,
             Cost = CostAuth,

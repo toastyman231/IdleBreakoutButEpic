@@ -334,6 +334,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallNameAuth: Basic Ball
+  BallDescAuth: Standard ball that bounces off walls and breaks bricks.
   PowerAuth: 1
   SpeedAuth: 1
   CostAuth: 25

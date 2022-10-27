@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Systems;
 using Tags;
 using Unity.Burst;
@@ -191,7 +192,8 @@ public partial class BallPhysicsSystem : SystemBase
 
             BrickData brickData = BrickDatas[brickEntity];
 
-            int newHealth = brickData.Health - ballData.Power * GlobalData.PowerMultiplier;
+            int health = brickData.Health;
+            int newHealth = health - ballData.Power * GlobalData.PowerMultiplier;
             CommandBuffer.SetComponent(brickEntity, new BrickData{ Health = newHealth, Position = brickData.Position });
 
             if (Manager.HasComponent<PlasmaTag>(ballEntity))
@@ -211,15 +213,16 @@ public partial class BallPhysicsSystem : SystemBase
                     int damage = Mathf.Clamp(Mathf.RoundToInt(ballData.Power / 4f), 1, ballData.Power);
                     //Debug.Log(string.Format("{0}", hit.Entity.Index));
                     BrickData hitBrick = BrickDatas[hit.Entity];
-                    
-                    int brickHealth = hitBrick.Health - damage * GlobalData.PowerMultiplier;
+
+                    int curHealth = hitBrick.Health;
+                    int brickHealth = curHealth - damage * GlobalData.PowerMultiplier;
                     CommandBuffer.SetComponent(hit.Entity, new BrickData{ Health = brickHealth, Position = brickData.Position });
                     
                     if (newHealth <= 0)
                     {
                         CommandBuffer.DestroyEntity(hit.Entity);
                         GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
-                        GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = damage});
+                        GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = curHealth});
                         LevelOverEventQueue.Enqueue(2);
                     }
                 }
@@ -232,10 +235,10 @@ public partial class BallPhysicsSystem : SystemBase
             {
                 CommandBuffer.DestroyEntity(brickEntity);
                 GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
-                GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = ballData.Power});
+                GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = health});
                 LevelOverEventQueue.Enqueue(2);
             }
-            
+
             //Bricks.Dispose();
             
             /*PhysicsVelocity inVel = Velocities[ballEntity];

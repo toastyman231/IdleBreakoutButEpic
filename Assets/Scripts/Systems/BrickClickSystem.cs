@@ -37,6 +37,7 @@ public partial class BrickClickSystem : SystemBase
     [BurstCompile]
     protected override void OnUpdate()
     {
+        //Debug.Log("Mouse pos: " + _mainCamera.ViewportToWorldPoint(Input.mousePosition));
         if (Input.GetMouseButtonUp(0))
         {
             Click();
@@ -57,12 +58,15 @@ public partial class BrickClickSystem : SystemBase
 
         if (Raycast(rayStart, rayEnd, out var raycastHit))
         {
+            //Debug.Log("Location clicked: " + raycastHit.Position);
             var hitEntity = _buildPhysicsWorld.PhysicsWorld.Bodies[raycastHit.RigidBodyIndex].Entity;
             if (EntityManager.HasComponent<ClickableTag>(hitEntity) && EntityManager.HasComponent<BrickTag>(hitEntity))
             {
                 var brickData = EntityManager.GetComponentData<BrickData>(hitEntity);
+                //Debug.Log("Brick location: " + brickData.Position);
+                //Debug.Log("Entity: " + hitEntity.Index);
                 int newHealth = brickData.Health - _globalData.ClickX * _globalData.PowerMultiplier;
-                EntityManager.SetComponentData<BrickData>(hitEntity, new BrickData{Health = newHealth});
+                EntityManager.SetComponentData<BrickData>(hitEntity, new BrickData{Health = newHealth, Position = brickData.Position});
                 
                 if (newHealth <= 0)
                 {

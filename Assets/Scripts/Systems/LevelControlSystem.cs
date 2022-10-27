@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -15,27 +16,32 @@ public partial class LevelControlSystem : SystemBase
 {
     public event EventHandler CheckLevelCompleteEvent;
     public NativeQueue<int> EventQueue;
-    
+
+    private NativeArray<FixedString32Bytes> _levels;
+
     [BurstCompile]
     protected override void OnCreate()
     {
         base.OnCreate();
         EventQueue = new NativeQueue<int>(Allocator.Persistent);
         CheckLevelCompleteEvent += CheckLevelComplete;
+        _levels = new NativeArray<FixedString32Bytes>(1, Allocator.Persistent);
+        _levels[0] = "Level1";
     }
     
     [BurstCompile]
     protected override void OnStartRunning()
     {
         base.OnStartRunning();
-        // TODO: Replace with actual levels
-        LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/Test").positions);
+        // TODO: Make more levels
+        LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/Level1").positions);
     }
 
     [BurstCompile]
     protected override void OnDestroy()
     {
         EventQueue.Dispose();
+        _levels.Dispose();
         CheckLevelCompleteEvent -= CheckLevelComplete;
     }
 
@@ -60,7 +66,9 @@ public partial class LevelControlSystem : SystemBase
             var globalDataUpdate = World.GetOrCreateSystem<GlobalDataUpdateSystem>();
             globalDataUpdate.EventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = globalData.CurrentLevel * globalData.CashBonus});
             globalDataUpdate.EventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.LEVEL, NewData = globalData.CurrentLevel + 1});
-            //TODO: Load next level
+            BallShopControl.InvokeLevelLoadEvent();
+            //Debug.Log("Level to load: " + (globalData.CurrentLevel + 1) % _levels.Length);
+            LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/" + _levels[(globalData.CurrentLevel + 1) % _levels.Length]).positions);
         }
     }
     
@@ -82,6 +90,18 @@ public partial class LevelControlSystem : SystemBase
         }
         
         World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = brickPositions.Length});
+    }
+
+    [BurstCompile]
+    public void UnloadLevel()
+    {
+        EntityCommandBuffer.ParallelWriter commandBuffer =
+            World.GetOrCreateSystem<EntityCommandBufferSystem>().CreateCommandBuffer().AsParallelWriter();
+        Entities.ForEach((Entity entity, int nativeThreadIndex, ref BrickData brickData, in BrickTag tag) =>
+        {
+            commandBuffer.DestroyEntity(nativeThreadIndex, entity);
+        }).ScheduleParallel();
+        Dependency.Complete();
     }
     
     [BurstCompile]

@@ -323,6 +323,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallNameAuth: Plasma Ball
+  BallDescAuth: Will cause splash damage (25%) to bricks.
   PowerAuth: 3
   SpeedAuth: 2
   CostAuth: 200

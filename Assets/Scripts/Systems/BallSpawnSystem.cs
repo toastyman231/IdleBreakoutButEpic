@@ -51,10 +51,17 @@ public partial class BallSpawnSystem : SystemBase
                         .CalculateEntityCount();
                     if (currentCount > 0)
                     {
+                        Entity basicEntity = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<BallTag>())
+                            .ToEntityArray(Allocator.Temp)[0];
+                        BasicBallSharedData curData = EntityManager.GetComponentData<BasicBallSharedData>(basicEntity);
+                        
                         EntityManager.Instantiate(_basicBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
                         Entities.ForEach((ref BasicBallSharedData sharedData, in BallTag tag) =>
                         {
+                            sharedData.Speed = curData.Speed;
+                            sharedData.Power = curData.Power;
+                            sharedData.Cost = curData.Cost;
                             sharedData.Count = currentCount + amount;
                         }).ScheduleParallel();
                     }
@@ -75,12 +82,16 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         Entity plasmaEntity = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlasmaTag>())
                             .ToEntityArray(Allocator.Temp)[0];
+                        BasicBallSharedData curData = EntityManager.GetComponentData<BasicBallSharedData>(plasmaEntity);
                         PlasmaBallSharedData currentPlasma = EntityManager.GetComponentData<PlasmaBallSharedData>(plasmaEntity);
 
                         EntityManager.Instantiate(_plasmaBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
                         Entities.ForEach((ref BasicBallSharedData sharedData, ref PlasmaBallSharedData plasmaData, in PlasmaTag tag) =>
                         {
+                            sharedData.Speed = curData.Speed;
+                            sharedData.Power = curData.Power;
+                            sharedData.Cost = curData.Cost;
                             sharedData.Count = currentCount + amount;
                             plasmaData.Range = currentPlasma.Range;
                         }).ScheduleParallel();
@@ -100,10 +111,17 @@ public partial class BallSpawnSystem : SystemBase
                         .CalculateEntityCount();
                     if (currentCount > 0)
                     {
+                        Entity sniperEntity = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<SniperTag>())
+                            .ToEntityArray(Allocator.Temp)[0];
+                        BasicBallSharedData curData = EntityManager.GetComponentData<BasicBallSharedData>(sniperEntity);
+                        
                         EntityManager.Instantiate(_sniperBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
                         Entities.ForEach((ref BasicBallSharedData sharedData, in SniperTag tag) =>
                         {
+                            sharedData.Speed = curData.Speed;
+                            sharedData.Power = curData.Power;
+                            sharedData.Cost = curData.Cost;
                             sharedData.Count = currentCount + amount;
                         }).ScheduleParallel();
                     }
@@ -170,7 +188,7 @@ public partial class BallSpawnSystem : SystemBase
 
 public enum BallType
 {
-    BasicBall,
-    PlasmaBall,
-    SniperBall
+    BasicBall = 0,
+    PlasmaBall = 1,
+    SniperBall = 2
 }

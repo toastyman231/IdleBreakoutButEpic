@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using UnityEngine;
 
 public static class Extensions
 {
@@ -9,23 +10,23 @@ public static class Extensions
         num = num / i * i;
 
         if (num >= BigInteger.Parse("1000000000000000000000000000"))
-            return (num / BigInteger.Parse("1000000000000000000000000000")).ToString("0.##") + "OCT";
+            return (num / BigInteger.Parse("1000000000000000000000000000")).ToString("##0.##") + "OCT";
         else if (num >= BigInteger.Parse("1000000000000000000000000"))
-            return (num / BigInteger.Parse("1000000000000000000000000")).ToString("0##.##") + "SEPT";
+            return (num / BigInteger.Parse("1000000000000000000000000")).ToString("##0.##") + "SEPT";
         else if (num >= BigInteger.Parse("1000000000000000000000"))
-            return (num / BigInteger.Parse("1000000000000000000000")).ToString("0##.##") + "SEXT";
+            return (num / BigInteger.Parse("1000000000000000000000")).ToString("##0.##") + "SEXT";
         else if (num >= BigInteger.Parse("1000000000000000000"))
-            return (num / BigInteger.Parse("1000000000000000000")).ToString("0##.##") + "QUINT";
+            return (num / BigInteger.Parse("1000000000000000000")).ToString("##0.##") + "QUINT";
         else if (num >= BigInteger.Parse("1000000000000000"))
-            return (num / BigInteger.Parse("1000000000000000")).ToString("0##.##") + "QUAD";
+            return (num / BigInteger.Parse("1000000000000000")).ToString("##0.##") + "QUAD";
         else if (num >= 1000000000000)
-            return (num / 1000000000000).ToString("0##.##") + "T";
+            return (num / 1000000000000).ToString("##0.##") + "T";
         else if (num >= 1000000000)
-            return (num / 1000000000).ToString("0##.##") + "B";
+            return (num / 1000000000).ToString("##0.##") + "B";
         else if (num >= 1000000)
-            return (num / 1000000).ToString("0##.##") + "M";
+            return (num / 1000000).ToString("##0.##") + "M";
         else if (num >= 100000)
-            return (num / 1000).ToString("0##.##") + "K";
+            return (num / 1000).ToString("##0.##") + "K";
         else if (num >= 1000 && countK)
             return (num / 1000).ToString("0#.##") + "K";
 

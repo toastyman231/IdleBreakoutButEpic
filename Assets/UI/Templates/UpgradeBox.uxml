@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:GroupBox name="BasicUpgradeBox" style="width: 232px; height: 540px; justify-content: center; align-items: center;">
+        <ui:Label text="(x0)&#10;Basic Ball" display-tooltip-when-elided="true" name="ItemLabel" style="color: rgb(0, 0, 0); -unity-text-align: middle-center; font-size: 29px; height: 46px; width: 239px; justify-content: center; left: auto; align-items: center; -unity-font-style: bold;" />
+        <ui:GroupBox name="PictureContainer" style="left: auto; width: 193px; align-items: center; justify-content: center;">
+            <ui:VisualElement name="ItemPicture" style="background-image: url(&apos;project://database/Assets/Art/Normal%20Ball.png?fileID=2800000&amp;guid=c06572294f0beee459db559f51c389c3&amp;type=3#Normal Ball&apos;); width: 40px; height: 40px; justify-content: center; align-items: center; left: auto; -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0;" />
+        </ui:GroupBox>
+        <ui:GroupBox name="BasicSpeedUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+            <ui:Label text="Speed&#10;1 &gt;&gt; 2" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+            <ui:Button text="$100" display-tooltip-when-elided="true" name="BasicSpeedBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+        </ui:GroupBox>
+        <ui:GroupBox name="BasicPowerUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+            <ui:Label text="Power&#10;1 &gt;&gt; 2" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+            <ui:Button text="$250" display-tooltip-when-elided="true" name="BasicPowerBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+        </ui:GroupBox>
+        <ui:VisualElement name="Spacer" style="height: 4px; width: 76px;" />
+        <ui:Button text="Delete x1" display-tooltip-when-elided="true" name="DeleteButton" style="height: 55px; color: rgb(0, 0, 0); font-size: 40px; left: auto;" />
+    </ui:GroupBox>
+</ui:UXML>

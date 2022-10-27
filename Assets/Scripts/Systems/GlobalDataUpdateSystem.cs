@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -12,9 +13,12 @@ using UnityEngine;
 public partial class GlobalDataUpdateSystem : SystemBase
 {
     public event EventHandler<GlobalDataEventClass> UpdateLevelEvent;
+    public event EventHandler<GlobalDataEventClass> UpdateClicksEvent;
     public event EventHandler<GlobalDataEventClass> UpdateMoneyEvent;
     public event EventHandler<GlobalDataEventClass> UpdateBricksEvent;
     public NativeQueue<GlobalDataEventArgs> EventQueue;
+
+    private MoneySystem _moneySystem;
 
     protected override void OnCreate()
     {
@@ -22,6 +26,9 @@ public partial class GlobalDataUpdateSystem : SystemBase
         UpdateLevelEvent += UpdateGlobalLevel;
         UpdateMoneyEvent += UpdateGlobalMoney;
         UpdateBricksEvent += UpdateGlobalBricks;
+        UpdateClicksEvent += UpdateGlobalClicks;
+
+        _moneySystem = World.GetOrCreateSystem<MoneySystem>();
     }
 
     protected override void OnDestroy()
@@ -30,6 +37,7 @@ public partial class GlobalDataUpdateSystem : SystemBase
         UpdateLevelEvent -= UpdateGlobalLevel;
         UpdateMoneyEvent -= UpdateGlobalMoney;
         UpdateBricksEvent -= UpdateGlobalBricks;
+        UpdateClicksEvent -= UpdateGlobalClicks;
     }
 
     protected override void OnUpdate()
@@ -47,8 +55,20 @@ public partial class GlobalDataUpdateSystem : SystemBase
                 case Field.BRICKS:
                     UpdateBricksEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
                     break;
+                case Field.CLICKX:
+                    UpdateClicksEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
+                    break;
             }
         }
+    }
+    
+    private void UpdateGlobalClicks(object sender, GlobalDataEventClass args)
+    {
+        //Debug.Log("Updating level");
+        Entities.ForEach((ref GlobalData globalData) =>
+        {
+            globalData.ClickX = args.NewData;
+        }).WithoutBurst().Run();
     }
 
     private void UpdateGlobalLevel(object sender, GlobalDataEventClass args)
@@ -63,10 +83,12 @@ public partial class GlobalDataUpdateSystem : SystemBase
     private void UpdateGlobalMoney(object sender, GlobalDataEventClass args)
     {
         //Debug.Log("Adding " + args.NewData + " money");
-        Entities.ForEach((ref GlobalData globalData) =>
+        _moneySystem.Money = BigInteger.Add(_moneySystem.Money, new BigInteger(args.NewData));
+        /*Entities.ForEach((ref GlobalData globalData) =>
         {
             globalData.Money += args.NewData;
-        }).WithoutBurst().Run();
+        }).WithoutBurst().Run();*/
+        BallShopControl.InvokeIncreaseMoneyEvent();
     }
 
     private void UpdateGlobalBricks(object sender, GlobalDataEventClass args)
@@ -95,6 +117,8 @@ public enum Field
     MONEY,
     LEVEL,
     BRICKS,
+    CLICKX,
     POWER,
-    SPEED
+    SPEED,
+    RANGE
 }

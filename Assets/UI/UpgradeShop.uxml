@@ -1,0 +1,70 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:GroupBox name="BackgroundPanel" style="height: 870px; background-color: rgb(204, 195, 150); top: 165px; width: 1842px; left: 35px; visibility: hidden;">
+        <ui:GroupBox name="TabButtons" style="height: 96px; flex-direction: row; justify-content: center; padding-right: 0; align-items: center; flex-shrink: 0; flex-grow: 0;">
+            <ui:Button text="UPGRADES" display-tooltip-when-elided="true" name="UpgradesTabButton" style="width: 475px; height: 75px; color: rgb(0, 0, 0); font-size: 65px;" />
+            <ui:VisualElement name="Spacer" style="width: 25px;" />
+            <ui:Button text="PRESTIGE" display-tooltip-when-elided="true" name="PrestigeTabButton" style="width: 475px; height: 75px; color: rgb(0, 0, 0); font-size: 65px;" />
+        </ui:GroupBox>
+        <ui:GroupBox name="UpgradesPanel">
+            <ui:GroupBox name="BallUpgrades" style="height: 474px; flex-direction: row;">
+                <ui:VisualElement name="BasicUpgradeBox" style="top: -10px; left: auto; align-items: center;">
+                    <ui:Label text="Basic Ball" display-tooltip-when-elided="true" name="ItemLabelIGNORE" style="color: rgb(0, 0, 0); -unity-text-align: middle-center; font-size: 29px; height: 25px; width: 239px; justify-content: center; left: auto; align-items: center; -unity-font-style: bold;" />
+                    <ui:GroupBox name="PictureContainerIGNORE" style="left: auto; width: 193px; align-items: center; justify-content: center;">
+                        <ui:VisualElement name="ItemPicture" style="background-image: url(&apos;project://database/Assets/Art/Normal%20Ball.png?fileID=2800000&amp;guid=c06572294f0beee459db559f51c389c3&amp;type=3#Normal Ball&apos;); width: 40px; height: 40px; justify-content: center; align-items: center; left: auto; -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0;" />
+                    </ui:GroupBox>
+                    <ui:GroupBox name="BasicSpeedUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                        <ui:Label text="Speed&#10;1 &gt;&gt; 2" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+                        <ui:Button text="$100" display-tooltip-when-elided="true" name="BasicSpeedBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                    </ui:GroupBox>
+                    <ui:GroupBox name="BasicPowerUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                        <ui:Label text="Power&#10;1 &gt;&gt; 2" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+                        <ui:Button text="$250" display-tooltip-when-elided="true" name="BasicPowerBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                    </ui:GroupBox>
+                    <ui:VisualElement name="SpacerIGNORE" style="height: 4px; width: 76px;" />
+                    <ui:Button text="Delete x1" display-tooltip-when-elided="true" name="BasicSpeedDeleteButton" style="height: 55px; color: rgb(0, 0, 0); font-size: 40px; left: auto;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="PlasmaUpgradeBox" style="top: -10px; align-items: center;">
+                    <ui:Label text="Plasma Ball" display-tooltip-when-elided="true" name="ItemLabelIGNORE" style="color: rgb(0, 0, 0); -unity-text-align: middle-center; font-size: 29px; height: 25px; width: 239px; justify-content: center; left: auto; align-items: center; -unity-font-style: bold;" />
+                    <ui:GroupBox name="PictureContainerIGNORE" style="left: auto; width: 193px; align-items: center; justify-content: center;">
+                        <ui:VisualElement name="ItemPicture" style="background-image: url(&apos;project://database/Assets/Art/Plasma%20Ball.png?fileID=2800000&amp;guid=6d9a187987c77814c89c0833d6519eb9&amp;type=3#Plasma Ball&apos;); width: 40px; height: 40px; justify-content: center; align-items: center; left: auto; -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0;" />
+                    </ui:GroupBox>
+                    <ui:GroupBox name="PlasmaRangeUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                        <ui:Label text="Range&#10;1 &gt;&gt; 2" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+                        <ui:Button text="$1000" display-tooltip-when-elided="true" name="PlasmaRangeBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                    </ui:GroupBox>
+                    <ui:GroupBox name="PlasmaPowerUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                        <ui:Label text="Power&#10;3 &gt;&gt; 6" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+                        <ui:Button text="$1250" display-tooltip-when-elided="true" name="PlasmaPowerBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                    </ui:GroupBox>
+                    <ui:VisualElement name="SpacerIGNORE" style="height: 4px; width: 76px;" />
+                    <ui:Button text="Delete x1" display-tooltip-when-elided="true" name="PlasmaRangeDeleteButton" style="height: 55px; color: rgb(0, 0, 0); font-size: 40px; left: auto;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="SniperUpgradeBox" style="top: -10px; align-items: center;">
+                    <ui:Label text="Sniper Ball" display-tooltip-when-elided="true" name="ItemLabelIGNORE" style="color: rgb(0, 0, 0); -unity-text-align: middle-center; font-size: 29px; height: 25px; width: 239px; justify-content: center; left: auto; align-items: center; -unity-font-style: bold;" />
+                    <ui:GroupBox name="PictureContainerIGNORE" style="left: auto; width: 193px; align-items: center; justify-content: center;">
+                        <ui:VisualElement name="ItemPicture" style="background-image: url(&apos;project://database/Assets/Art/Sniper%20Ball.png?fileID=2800000&amp;guid=6100769389f434b45b108e035ecb0b22&amp;type=3#Sniper Ball&apos;); width: 40px; height: 40px; justify-content: center; align-items: center; left: auto; -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0;" />
+                    </ui:GroupBox>
+                    <ui:GroupBox name="SniperSpeedUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                        <ui:Label text="Speed&#10;4 &gt;&gt; 5" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+                        <ui:Button text="$7500" display-tooltip-when-elided="true" name="SniperSpeedBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                    </ui:GroupBox>
+                    <ui:GroupBox name="SniperPowerUpgrade" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                        <ui:Label text="Power&#10;5 &gt;&gt; 10" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+                        <ui:Button text="$8000" display-tooltip-when-elided="true" name="SniperPowerBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                    </ui:GroupBox>
+                    <ui:VisualElement name="SpacerIGNORE" style="height: 4px; width: 76px;" />
+                    <ui:Button text="Delete x1" display-tooltip-when-elided="true" name="SniperSpeedDeleteButton" style="height: 55px; color: rgb(0, 0, 0); font-size: 40px; left: auto;" />
+                </ui:VisualElement>
+            </ui:GroupBox>
+            <ui:GroupBox name="OtherUpgrades" style="height: 174px; flex-direction: row;">
+                <ui:GroupBox name="ClickXUpgradeContainer" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                    <ui:Label text="Click X&#10;1 &gt;&gt; 2" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 75px; -unity-font-style: bold;" />
+                    <ui:Button text="$50" display-tooltip-when-elided="true" name="ClickXBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                </ui:GroupBox>
+            </ui:GroupBox>
+        </ui:GroupBox>
+        <ui:GroupBox name="CloseContainer" style="align-items: center; justify-content: center;">
+            <ui:Button text="CLOSE" display-tooltip-when-elided="true" name="CloseButton" style="width: 250px; height: 60px; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-size: 50px;" />
+        </ui:GroupBox>
+    </ui:GroupBox>
+</ui:UXML>

@@ -9,6 +9,7 @@ using Unity.Mathematics;
 public struct BasicBallSharedData : IComponentData
 {
     public FixedString64Bytes BallName;
+    public FixedString64Bytes BallDesc;
     public int Power;
     public int Speed;
     public FixedString64Bytes Cost;

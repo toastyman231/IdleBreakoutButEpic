@@ -322,6 +322,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BallNameAuth: Sniper Ball
+  BallDescAuth: Bounces off walls toward the nearest brick.
   PowerAuth: 5
   SpeedAuth: 4
   CostAuth: 1500
