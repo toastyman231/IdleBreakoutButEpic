@@ -144,6 +144,8 @@ public partial class BallPhysicsSystem : SystemBase
         [BurstCompile]
         public void Execute(CollisionEvent collisionEvent)
         {
+            if (!Manager.HasComponent<DoneSetupTag>(collisionEvent.EntityA) || !Manager.HasComponent<DoneSetupTag>(collisionEvent.EntityB)) return;
+
             Entity ballEntity = (Manager.HasComponent<BasicBallSharedData>(collisionEvent.EntityB))
                 ? collisionEvent.EntityB
                 : collisionEvent.EntityA;
@@ -198,7 +200,7 @@ public partial class BallPhysicsSystem : SystemBase
                 //Debug.Log(string.Format("After hit: {0}", vectorToTarget * ballData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime));
                 return;
             }
-            
+
             Entity brickEntity = (Manager.HasComponent<BrickTag>(collisionEvent.EntityB))
                 ? collisionEvent.EntityB
                 : collisionEvent.EntityA;

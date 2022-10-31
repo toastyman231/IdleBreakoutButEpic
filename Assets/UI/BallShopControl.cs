@@ -17,6 +17,7 @@ public class BallShopControl : MonoBehaviour
     public static event EventHandler LevelLoadEvent;
 
     [SerializeField] private UIDocument upgradeDocument;
+    [SerializeField] private UpgradeShopControl upgradeControl;
 
     private Dictionary<string, string> _ballTypeLookup;
     private Button[] _buyButtons;
@@ -86,6 +87,15 @@ public class BallShopControl : MonoBehaviour
     {
         document.rootVisualElement.Q("BackgroundPanel").visible =
             !document.rootVisualElement.Q("BackgroundPanel").visible;
+
+        if (document.rootVisualElement.Q("BackgroundPanel").visible)
+        {
+            upgradeControl.OnUIShow();
+        }
+        else
+        {
+            upgradeControl.OnUIHide();
+        }
     }
 
     private void OnDestroy()
@@ -228,6 +238,11 @@ public class BallShopControl : MonoBehaviour
             default:
                 Debug.Log("You fucked something up");
                 break;
+        }
+
+        if (upgradeDocument.rootVisualElement.Q<GroupBox>("BackgroundPanel").visible)
+        {
+            upgradeControl.OnUIShow();
         }
     }
 

@@ -14,6 +14,7 @@ public class UpgradeShopControl : MonoBehaviour
     private Dictionary<string, Label> _labels;
     private Dictionary<string, Upgrade> _upgrades;
     private Dictionary<string, Button> _buttons;
+    private List<VisualElement> _upgradeContainers;
 
     private GroupBox _upgradesPanel;
 
@@ -24,6 +25,7 @@ public class UpgradeShopControl : MonoBehaviour
         _labels = new Dictionary<string, Label>();
         _buttons = new Dictionary<string, Button>();
         _upgrades = new Dictionary<string, Upgrade>();
+        _upgradeContainers = new List<VisualElement>();
         _uiDocument = GetComponent<UIDocument>();
 
         _upgradesPanel = _uiDocument.rootVisualElement.Q<GroupBox>("BackgroundPanel").Q<GroupBox>("UpgradesPanel");
@@ -39,6 +41,9 @@ public class UpgradeShopControl : MonoBehaviour
 
         foreach (var upgradeBox in _upgradesPanel.Q<GroupBox>("BallUpgrades").Children())
         {
+            _upgradeContainers.Add(upgradeBox);
+            ToggleUpgradeBox(upgradeBox.name.Substring(0, upgradeBox.name.IndexOf("Upgrade")), upgradeBox);
+            
             foreach (var upgrade in upgradeBox.Children())
             {
                 if(upgrade.name.Contains("IGNORE")) continue;
@@ -47,7 +52,7 @@ public class UpgradeShopControl : MonoBehaviour
                 {
                     string delKey = upgrade.name.Substring(0, upgrade.name.IndexOf("Delete"));
                     
-                    upgrade.RegisterCallback<ClickEvent>(_upgrades[delKey].DeleteBall);
+                    upgrade.RegisterCallback<ClickEvent, Action>(_upgrades[delKey].DeleteBall, OnUIShow);
                     continue;
                 }
                 
@@ -69,7 +74,57 @@ public class UpgradeShopControl : MonoBehaviour
         _uiDocument.rootVisualElement.Q<Button>("CloseButton").RegisterCallback<ClickEvent>((type) =>
         {
             _uiDocument.rootVisualElement.Q<GroupBox>("BackgroundPanel").visible = false;
+            OnUIHide();
         });
+    }
+
+    public void OnUIShow()
+    {
+        foreach (var upgradeBox in _upgradeContainers)
+        {
+            ToggleUpgradeBox(upgradeBox.name.Substring(0, upgradeBox.name.IndexOf("Upgrade")), upgradeBox);
+        }
+    }
+
+    public void OnUIHide()
+    {
+        foreach (var upgradeBox in _upgradeContainers)
+        {
+            upgradeBox.visible = false;
+        }
+    }
+
+    private void ToggleUpgradeBox(string ballType, VisualElement upgradeBox)
+    {
+        EntityQuery entityQuery;
+        switch (ballType)
+        {
+            case "Basic":
+                entityQuery =
+                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                        ComponentType.ReadOnly<BallTag>());
+                break;
+            case "Plasma":
+                entityQuery =
+                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                        ComponentType.ReadOnly<PlasmaTag>());
+                break;
+            case "Sniper":
+                entityQuery =
+                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                        ComponentType.ReadOnly<SniperTag>());
+                break;
+            case "Scatter":
+                entityQuery =
+                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                        ComponentType.ReadOnly<ScatterTag>());
+                break;
+            default:
+                Debug.Log("Error toggling upgrade panel: " + ballType);
+                return;
+        }
+
+        upgradeBox.visible = entityQuery.CalculateEntityCount() > 0;
     }
 }
 
@@ -170,7 +225,7 @@ public struct Upgrade
         return new BigInteger(result);
     }
 
-    public void DeleteBall(ClickEvent evt)
+    public void DeleteBall(ClickEvent evt, Action onDelete)
     {
         EntityQuery query;
         int count = 0;
@@ -191,6 +246,7 @@ public struct Upgrade
                     .SetBallData(_ballType, false, -1, -1, "-1", count - 1, -1);
                 _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
                 BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
+                onDelete();
                 return;
             case BallType.SniperBall:
                 query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<SniperTag>());
@@ -207,6 +263,7 @@ public struct Upgrade
                     .SetBallData(_ballType, false, -1, -1, "-1", count - 1, -1);
                 _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
                 BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
+                onDelete();
                 return;
             default:
                 Debug.Log("Error deleting ball!");
@@ -217,5 +274,6 @@ public struct Upgrade
             .SetBallData(_ballType, false, -1, -1, "-1", count - 1);
         _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
         BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
+        onDelete();
     }
 }

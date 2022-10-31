@@ -270,6 +270,7 @@ public partial class BallSpawnSystem : SystemBase
             //Debug.Log(string.Format("Set up: {0}", pv.Linear));
             
             cmBuffer.RemoveComponent<NewBallTag>(_threadIndex, entity);
+            cmBuffer.AddComponent<DoneSetupTag>(_threadIndex, entity);
         }
     }
 }

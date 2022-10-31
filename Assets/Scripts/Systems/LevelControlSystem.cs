@@ -87,6 +87,7 @@ public partial class LevelControlSystem : SystemBase
                 Health = globalData.CurrentLevel,
                 Position = position
             });
+            EntityManager.AddComponent<DoneSetupTag>(entity);
         }
         
         World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = brickPositions.Length});

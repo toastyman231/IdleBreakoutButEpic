@@ -186,6 +186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   upgradeDocument: {fileID: 1815485448}
+  upgradeControl: {fileID: 1815485449}
 --- !u!1 &43171880
 GameObject:
   m_ObjectHideFlags: 0
