@@ -61,6 +61,8 @@ public partial class BallPhysicsSystem : SystemBase
             World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.AsParallelWriter();
         NativeQueue<int>.ParallelWriter levelOverEventQueueParallelWriter =
             World.GetOrCreateSystem<LevelControlSystem>().EventQueue.AsParallelWriter();
+        NativeQueue<SpawnEventArgs>.ParallelWriter spawnEventQueueParallelWriter =
+            World.GetOrCreateSystem<BallSpawnSystem>().SpawnBallEventQueue.AsParallelWriter();
 
         new BallPhysicsJob
         {
@@ -76,8 +78,10 @@ public partial class BallPhysicsSystem : SystemBase
             Velocities = GetComponentDataFromEntity<PhysicsVelocity>(),
             BallDatas = GetComponentDataFromEntity<BasicBallSharedData>(),
             PlasmaData = GetComponentDataFromEntity<PlasmaBallSharedData>(),
+            ScatterData = GetComponentDataFromEntity<ScatterBallSharedData>(),
             BrickDatas = GetComponentDataFromEntity<BrickData>(),
             GlobalDataEventQueue = globalDataEventQueueParallelWriter,
+            SpawnEventQueue = spawnEventQueueParallelWriter,
             LevelOverEventQueue = levelOverEventQueueParallelWriter
         }.Schedule(_stepPhysicsWorldSystem.Simulation, Dependency).Complete();
         //_endSimECBSystem.AddJobHandleForProducer(basicJob);
@@ -129,10 +133,12 @@ public partial class BallPhysicsSystem : SystemBase
         public ComponentDataFromEntity<PhysicsVelocity> Velocities;
         public ComponentDataFromEntity<BasicBallSharedData> BallDatas;
         public ComponentDataFromEntity<PlasmaBallSharedData> PlasmaData;
+        public ComponentDataFromEntity<ScatterBallSharedData> ScatterData;
         public ComponentDataFromEntity<BrickData> BrickDatas;
 
         public NativeQueue<GlobalDataEventArgs>.ParallelWriter GlobalDataEventQueue;
-        
+        public NativeQueue<SpawnEventArgs>.ParallelWriter SpawnEventQueue;
+
         public NativeQueue<int>.ParallelWriter LevelOverEventQueue;
 
         [BurstCompile]
@@ -146,7 +152,7 @@ public partial class BallPhysicsSystem : SystemBase
             if (Manager.HasComponent<WallTag>(collisionEvent.EntityA) ||
                 Manager.HasComponent<WallTag>(collisionEvent.EntityB))
             {
-                if (!Manager.HasComponent<SniperTag>(ballEntity) || Bricks.Length == 0)
+                if (!Manager.HasComponent<WallColliderTag>(ballEntity) || Bricks.Length == 0)
                 {
                     /*PhysicsVelocity vel = Velocities[ballEntity];
                     Translation tr = Translations[ballEntity];
@@ -157,6 +163,13 @@ public partial class BallPhysicsSystem : SystemBase
                     CommandBuffer.SetComponent(ballEntity, 
                         new PhysicsVelocity{ Linear = refVel * ballData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime });*/
                     
+                    return;
+                }
+
+                if (Manager.HasComponent<ScatterTag>(ballEntity))
+                {
+                    ScatterBallSharedData scatterData = ScatterData[ballEntity];
+                    SpawnEventQueue.Enqueue(new SpawnEventArgs{Type = BallType.ScatterChild, Amount = scatterData.ExtraBalls, Position = Translations[ballEntity].Value});
                     return;
                 }
 
@@ -237,6 +250,11 @@ public partial class BallPhysicsSystem : SystemBase
                 GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
                 GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = health});
                 LevelOverEventQueue.Enqueue(2);
+            }
+
+            if (Manager.HasComponent<ScatterChildTag>(ballEntity))
+            {
+                CommandBuffer.DestroyEntity(ballEntity);
             }
 
             //Bricks.Dispose();

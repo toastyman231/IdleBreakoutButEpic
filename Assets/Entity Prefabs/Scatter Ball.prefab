@@ -14,11 +14,12 @@ GameObject:
   - component: {fileID: 1900180632167706239}
   - component: {fileID: 1900180632167706238}
   - component: {fileID: 5408948474962247735}
-  - component: {fileID: 3722063249040812130}
-  - component: {fileID: 2506156174662427387}
-  - component: {fileID: 4741429503651830656}
+  - component: {fileID: 3454641570083917667}
+  - component: {fileID: 1106826502649858631}
+  - component: {fileID: 9149116282378878825}
+  - component: {fileID: 6007584659230416757}
   m_Layer: 0
-  m_Name: Sniper Ball
+  m_Name: Scatter Ball
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -80,7 +81,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: 6100769389f434b45b108e035ecb0b22, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 76cc802738e2de646b8e688893d8f316, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -310,7 +311,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b349c5826a9806142abf2326e70d5b1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &3722063249040812130
+--- !u!114 &3454641570083917667
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -322,12 +323,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 808eb6562c2516848b4a65e7644bfbeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BallNameAuth: Sniper Ball
-  BallDescAuth: Bounces off walls toward the nearest brick.
-  PowerAuth: 5
-  SpeedAuth: 4
-  CostAuth: 1500
---- !u!114 &2506156174662427387
+  BallNameAuth: Scatter Ball
+  BallDescAuth: Creates additional single-hit balls (50% power).
+  PowerAuth: 10
+  SpeedAuth: 3
+  CostAuth: 10000
+--- !u!114 &1106826502649858631
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -336,10 +337,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 1900180632167706210}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b52ef9a1af1a44caae610b21fd6584ef, type: 3}
+  m_Script: {fileID: 11500000, guid: 9fa0b36d5ebcd2744b01270017a355c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &4741429503651830656
+--- !u!114 &9149116282378878825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900180632167706210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efb9570e887c1cf4492a1226ba463736, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ExtraBalls: 2
+--- !u!114 &6007584659230416757
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

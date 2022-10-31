@@ -6,6 +6,7 @@ using Systems;
 using Tags;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -158,6 +159,19 @@ public class BallShopControl : MonoBehaviour
                     cost = BigInteger.Parse(_buyButtons[2].text.Substring(1));
                 }
                 break;
+            case BallType.ScatterBall:
+                try
+                {
+                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
+                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ScatterTag>())
+                            .ToEntityArray(Allocator.Temp)[0]);
+                    cost = BigInteger.Parse(ballData.Cost.ToString());
+                }
+                catch
+                {
+                    cost = BigInteger.Parse(_buyButtons[3].text.Substring(1));
+                }
+                break;
         }
 
         int maxBalls = 50;
@@ -189,21 +203,27 @@ public class BallShopControl : MonoBehaviour
         {
             case "BasicBall":
                 types[0] = BallType.BasicBall;
-                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount);
+                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount, float3.zero);
                 _costIncreases.Enqueue(UpdateCosts(ballType));
                 InvokeBallUpdateEvent(BallType.BasicBall, 1);
                 break;
             case "PlasmaBall":
                 types[0] = BallType.PlasmaBall;
-                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount);
+                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount, float3.zero);
                 _costIncreases.Enqueue(UpdateCosts(ballType));
                 InvokeBallUpdateEvent(BallType.PlasmaBall, 1);
                 break;
             case "SniperBall":
                 types[0] = BallType.SniperBall;
-                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount);
+                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount, float3.zero);
                 _costIncreases.Enqueue(UpdateCosts(ballType));
                 InvokeBallUpdateEvent(BallType.SniperBall, 1);
+                break;
+            case "ScatterBall":
+                types[0] = BallType.ScatterBall;
+                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount, float3.zero);
+                _costIncreases.Enqueue(UpdateCosts(ballType));
+                InvokeBallUpdateEvent(BallType.ScatterBall, 1);
                 break;
             default:
                 Debug.Log("You fucked something up");
@@ -244,6 +264,14 @@ public class BallShopControl : MonoBehaviour
                 newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.35f);
                 _buyButtons[2].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.SniperBall, false, -1, -1, newCost.ToString(), -1);
+            case "ScatterBall":
+                var scatterBallQuery = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<ScatterTag>());
+                var scatterBalls = scatterBallQuery.ToEntityArray(Allocator.Temp);
+                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(scatterBalls[^1]).Cost.ToString();
+                newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.35f);
+                _buyButtons[3].text = "$" + newCost.NumberFormat();
+                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.ScatterBall, false, -1, -1, newCost.ToString(), -1, -1);
             default:
                 return () => Debug.Log("Unrecognized ball type!");
         }
@@ -272,6 +300,9 @@ public class BallShopControl : MonoBehaviour
                 break;
             case BallType.SniperBall:
                 ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<SniperTag>());
+                break;
+            case BallType.ScatterBall:
+                ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ScatterTag>());
                 break;
             default:
                 Debug.Log("Default case");

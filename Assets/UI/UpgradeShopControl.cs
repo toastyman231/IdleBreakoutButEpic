@@ -34,6 +34,8 @@ public class UpgradeShopControl : MonoBehaviour
         _upgrades.Add("PlasmaPower", new Upgrade("Power", BallType.PlasmaBall, 1250, 1.5f, Field.POWER, 3, int.MaxValue, 3));
         _upgrades.Add("SniperSpeed", new Upgrade("Speed", BallType.SniperBall, 7500, 1.75f, Field.SPEED, 4, 10));
         _upgrades.Add("SniperPower", new Upgrade("Power", BallType.SniperBall, 8000, 1.35f, Field.POWER, 5, int.MaxValue, 5));
+        _upgrades.Add("ScatterExtraBalls", new Upgrade("Extra Balls", BallType.ScatterBall, 75000, 2.5f, Field.EXTRA, 1, 10));
+        _upgrades.Add("ScatterPower", new Upgrade("Power", BallType.ScatterBall, 100000, 1.3f, Field.POWER, 10, int.MaxValue, 10));
 
         foreach (var upgradeBox in _upgradesPanel.Q<GroupBox>("BallUpgrades").Children())
         {
@@ -138,6 +140,10 @@ public struct Upgrade
                     _world.GetOrCreateSystem<BallSharedDataUpdateSystem>()
                         .SetBallData(_ballType, true, -1, -1, "-1", -1, _stepSize);
                     break;
+                case Field.EXTRA:
+                    _world.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                        .SetBallData(_ballType, true, -1, -1, "-1", -1, _stepSize);
+                    break;
                 case Field.CLICKX:
                     GlobalData globalData = _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().GetSingleton<GlobalData>();
                     _world.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(
@@ -192,6 +198,16 @@ public struct Upgrade
                 if (count == 0) return;
 
                 break;
+            case BallType.ScatterBall:
+                query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ScatterTag>());
+                count = query.CalculateEntityCount();
+                if (count == 0) return;
+                
+                _world.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                    .SetBallData(_ballType, false, -1, -1, "-1", count - 1, -1);
+                _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
+                BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
+                return;
             default:
                 Debug.Log("Error deleting ball!");
                 return;

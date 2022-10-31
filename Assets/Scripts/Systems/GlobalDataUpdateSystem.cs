@@ -120,5 +120,6 @@ public enum Field
     CLICKX,
     POWER,
     SPEED,
-    RANGE
+    RANGE,
+    EXTRA
 }
