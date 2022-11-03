@@ -28,12 +28,15 @@ public partial class BallPhysicsSystem : SystemBase
     private CollisionFilter _plasmaFilter;
     private EntityQuery _brickQuery;
 
+    private NativeList<int> _collisionEventIds;
+
     // TODO: Handle all of this stuff in each Ball's UpdateSystem
     
     [BurstCompile]
     protected override void OnCreate()
     {
         base.OnCreate();
+        _collisionEventIds = new NativeList<int>(Allocator.Persistent);
         _stepPhysicsWorldSystem = World.GetOrCreateSystem<StepPhysicsWorld>();
         _buildPhysicsWorldSystem = World.GetOrCreateSystem<BuildPhysicsWorld>();
         _endSimECBSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
@@ -51,7 +54,14 @@ public partial class BallPhysicsSystem : SystemBase
     {
         this.RegisterPhysicsRuntimeSystemReadWrite();
     }
-    
+
+    [BurstCompile]
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        _collisionEventIds.Dispose();
+    }
+
     [BurstCompile]
     protected override void OnUpdate()
     {
@@ -63,6 +73,29 @@ public partial class BallPhysicsSystem : SystemBase
             World.GetOrCreateSystem<LevelControlSystem>().EventQueue.AsParallelWriter();
         NativeQueue<SpawnEventArgs>.ParallelWriter spawnEventQueueParallelWriter =
             World.GetOrCreateSystem<BallSpawnSystem>().SpawnBallEventQueue.AsParallelWriter();
+        
+        new CannonballPhysicsJob
+        {
+            Manager = _entityManager,
+            GlobalData = GetSingleton<GlobalData>(),
+            CommandBuffer = ecb,
+            DeltaTime = Time.DeltaTime,
+            Random = new Random((uint)DateTime.Now.Ticks),
+            Bricks = _brickQuery.ToEntityArray(Allocator.TempJob),
+            Translations = GetComponentDataFromEntity<Translation>(),
+            Velocities = GetComponentDataFromEntity<PhysicsVelocity>(),
+            BallDatas = GetComponentDataFromEntity<BasicBallSharedData>(),
+            BrickDatas = GetComponentDataFromEntity<BrickData>(),
+            CollisionIds = _collisionEventIds,
+            GlobalDataEventQueue = globalDataEventQueueParallelWriter,
+            LevelOverEventQueue = levelOverEventQueueParallelWriter
+        }.Schedule(_stepPhysicsWorldSystem.Simulation, Dependency).Complete();
+        
+        new CannonballSpeedJob
+        {
+            GlobalData = GetSingleton<GlobalData>(),
+            DeltaTime = Time.DeltaTime
+        }.ScheduleParallel(Dependency).Complete();
 
         new BallPhysicsJob
         {
@@ -80,6 +113,7 @@ public partial class BallPhysicsSystem : SystemBase
             PlasmaData = GetComponentDataFromEntity<PlasmaBallSharedData>(),
             ScatterData = GetComponentDataFromEntity<ScatterBallSharedData>(),
             BrickDatas = GetComponentDataFromEntity<BrickData>(),
+            CollisionIds = _collisionEventIds,
             GlobalDataEventQueue = globalDataEventQueueParallelWriter,
             SpawnEventQueue = spawnEventQueueParallelWriter,
             LevelOverEventQueue = levelOverEventQueueParallelWriter
@@ -136,6 +170,7 @@ public partial class BallPhysicsSystem : SystemBase
         public ComponentDataFromEntity<ScatterBallSharedData> ScatterData;
         public ComponentDataFromEntity<BrickData> BrickDatas;
 
+        public NativeList<int> CollisionIds;
         public NativeQueue<GlobalDataEventArgs>.ParallelWriter GlobalDataEventQueue;
         public NativeQueue<SpawnEventArgs>.ParallelWriter SpawnEventQueue;
 
@@ -154,17 +189,27 @@ public partial class BallPhysicsSystem : SystemBase
             if (Manager.HasComponent<WallTag>(collisionEvent.EntityA) ||
                 Manager.HasComponent<WallTag>(collisionEvent.EntityB))
             {
+                //Debug.Log("hit wall!");
                 if (!Manager.HasComponent<WallColliderTag>(ballEntity) || Bricks.Length == 0)
                 {
-                    /*PhysicsVelocity vel = Velocities[ballEntity];
-                    Translation tr = Translations[ballEntity];
-                    float rand = Random.NextInt(-5, 6);
+                    if (Manager.HasComponent<CannonballTag>(ballEntity))
+                    {
+                        //Debug.Log("Cannonball hit wall!");
+                        PhysicsVelocity inVel = Velocities[ballEntity];
+                        Translation ballPos = Translations[ballEntity];
+                        //float randOffset = Random.NextInt(-5, 6);
 
-                    float3 refVel = Reflect(tr.Value, vel.Linear, collisionEvent.Normal, rand);
-            
-                    CommandBuffer.SetComponent(ballEntity, 
-                        new PhysicsVelocity{ Linear = refVel * ballData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime });*/
-                    
+                        float3 reflectVel = Reflect(ballPos.Value, inVel.Linear, collisionEvent.Normal, 0f);
+
+                        CommandBuffer.SetComponent(ballEntity,
+                            new PhysicsVelocity
+                            {
+                                Linear = math.normalize(reflectVel) * ballData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed *
+                                         DeltaTime
+                            });
+                        return;
+                    }
+
                     return;
                 }
 
@@ -200,16 +245,42 @@ public partial class BallPhysicsSystem : SystemBase
                 //Debug.Log(string.Format("After hit: {0}", vectorToTarget * ballData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime));
                 return;
             }
-
+            
             Entity brickEntity = (Manager.HasComponent<BrickTag>(collisionEvent.EntityB))
                 ? collisionEvent.EntityB
                 : collisionEvent.EntityA;
-
             BrickData brickData = BrickDatas[brickEntity];
+            
+            if (CollisionIds.Contains(brickEntity.Index)) return;
+            
+            CollisionIds.Add(brickEntity.Index);
 
-            int health = brickData.Health;
-            int newHealth = health - ballData.Power * GlobalData.PowerMultiplier;
-            CommandBuffer.SetComponent(brickEntity, new BrickData{ Health = newHealth, Position = brickData.Position });
+            if (Manager.HasComponent<CannonballTag>(ballEntity))
+            {
+                if (brickData.Health >= ballData.Power)
+                {
+                    //Debug.Log("Collision event cannonball!");
+                    int damage = ballData.Power * GlobalData.PowerMultiplier;
+                    if (brickData.Poisoned) damage *= 2;
+                    CommandBuffer.SetComponent(brickEntity, new BrickData{ Health = brickData.Health - damage, 
+                        Position = brickData.Position, Poisoned = brickData.Poisoned});
+                    
+                    PhysicsVelocity inVel = Velocities[ballEntity];
+                    Translation ballPos = Translations[ballEntity];
+                    float randOffset = Random.NextInt(-5, 6);
+
+                    float3 reflectVel = Reflect(ballPos.Value, inVel.Linear, new float3(-1, 0, 0), randOffset);
+            
+                    CommandBuffer.SetComponent(ballEntity, 
+                        new PhysicsVelocity{ Linear = reflectVel * ballData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime });
+                }
+                return;
+            }
+            
+            int dam = ballData.Power * GlobalData.PowerMultiplier;
+            if (brickData.Poisoned) dam *= 2;
+            int newHealth = brickData.Health - dam;
+            CommandBuffer.SetComponent(brickEntity, new BrickData{ Health = newHealth, Position = brickData.Position, Poisoned = brickData.Poisoned});
 
             if (Manager.HasComponent<PlasmaTag>(ballEntity))
             {
@@ -225,56 +296,134 @@ public partial class BallPhysicsSystem : SystemBase
                 {
                     if (hit.Distance <= 0.1f) continue;
                     
-                    int damage = Mathf.Clamp(Mathf.RoundToInt(ballData.Power / 4f), 1, ballData.Power);
+                    int damage = Mathf.Clamp(Mathf.RoundToInt(ballData.Power / 4f), 1, ballData.Power) * GlobalData.PowerMultiplier;
                     //Debug.Log(string.Format("{0}", hit.Entity.Index));
                     BrickData hitBrick = BrickDatas[hit.Entity];
 
                     int curHealth = hitBrick.Health;
-                    int brickHealth = curHealth - damage * GlobalData.PowerMultiplier;
-                    CommandBuffer.SetComponent(hit.Entity, new BrickData{ Health = brickHealth, Position = brickData.Position });
+                    if (brickData.Poisoned) damage *= 2;
+                    CommandBuffer.SetComponent(brickEntity, new BrickData{ Health = brickData.Health - damage, 
+                        Position = brickData.Position, Poisoned = brickData.Poisoned});
                     
-                    if (newHealth <= 0)
+                    if (curHealth - damage <= 0)
                     {
                         CommandBuffer.DestroyEntity(hit.Entity);
                         GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
                         GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = curHealth});
-                        LevelOverEventQueue.Enqueue(2);
+                        //LevelOverEventQueue.Enqueue(2);
                     }
                 }
 
                 hits.Dispose();
                 //Debug.Log("Plasma ball hit effect!");
             }
+            
+            if (Manager.HasComponent<ScatterChildTag>(ballEntity))
+            {
+                CommandBuffer.DestroyEntity(ballEntity); 
+            }
 
             if (newHealth <= 0)
             {
+                CollisionIds.RemoveAt(CollisionIds.IndexOf(brickEntity.Index));
                 CommandBuffer.DestroyEntity(brickEntity);
                 GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
-                GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = health});
-                LevelOverEventQueue.Enqueue(2);
+                GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = brickData.Health});
+                return;
+                //LevelOverEventQueue.Enqueue(2);
             }
 
-            if (Manager.HasComponent<ScatterChildTag>(ballEntity))
+            if (Manager.HasComponent<PoisonTag>(ballEntity) && !brickData.Poisoned)
             {
-                CommandBuffer.DestroyEntity(ballEntity);
+                CommandBuffer.SetComponent(brickEntity,
+                    new BrickData { Health = newHealth, Position = brickData.Position, Poisoned = true });
             }
 
-            //Bricks.Dispose();
+            CollisionIds.RemoveAt(CollisionIds.IndexOf(brickEntity.Index));
+        }
+    }
+
+    [BurstCompile]
+    private partial struct CannonballSpeedJob : IJobEntity
+    {
+        public GlobalData GlobalData;
+        public float DeltaTime;
+        
+        void Execute(ref BasicBallSharedData ballSharedData, ref PhysicsVelocity pv, in CannonballTag tag)
+        {
+            float3 vel = pv.Linear;
+            if (math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z) < 7f)
+            {
+                pv.Linear = math.normalize(vel) * ballSharedData.Speed * GlobalData.SpeedScale *
+                            GlobalData.GlobalSpeed * DeltaTime;
+            }
+        }
+    }
+    
+    [BurstCompile]
+    private struct CannonballPhysicsJob : ITriggerEventsJob
+    {
+        public EntityManager Manager;
+
+        public GlobalData GlobalData;
+
+        public EntityCommandBuffer CommandBuffer;
+        
+        public float DeltaTime;
+
+        public Random Random;
+        
+        [DeallocateOnJobCompletion]
+        public NativeArray<Entity> Bricks;
+        
+        public ComponentDataFromEntity<Translation> Translations;
+        public ComponentDataFromEntity<PhysicsVelocity> Velocities;
+        public ComponentDataFromEntity<BasicBallSharedData> BallDatas;
+        public ComponentDataFromEntity<BrickData> BrickDatas;
+
+        public NativeList<int> CollisionIds; 
+
+        public NativeQueue<GlobalDataEventArgs>.ParallelWriter GlobalDataEventQueue;
+        public NativeQueue<int>.ParallelWriter LevelOverEventQueue;
+
+        public void Execute(TriggerEvent triggerEvent)
+        {
+            if (!Manager.HasComponent<DoneSetupTag>(triggerEvent.EntityA) ||
+                !Manager.HasComponent<DoneSetupTag>(triggerEvent.EntityB)) return;
+
+            Entity ballEntity = (Manager.HasComponent<BasicBallSharedData>(triggerEvent.EntityB))
+                ? triggerEvent.EntityB
+                : triggerEvent.EntityA;
+            BasicBallSharedData ballData = BallDatas[ballEntity];
+
+            Entity brickEntity = (Manager.HasComponent<BrickTag>(triggerEvent.EntityB))
+                ? triggerEvent.EntityB
+                : triggerEvent.EntityA;
+            BrickData brickData = BrickDatas[brickEntity];
             
-            /*PhysicsVelocity inVel = Velocities[ballEntity];
-            Translation ballPos = Translations[ballEntity];
-            float randOffset = Random.NextInt(-5, 6);
-
-            float3 reflectVel = Reflect(ballPos.Value, inVel.Linear, collisionEvent.Normal, randOffset);
+            if (CollisionIds.Contains(brickEntity.Index)) return;
             
-            CommandBuffer.SetComponent(ballEntity, 
-                new PhysicsVelocity{ Linear = reflectVel * ballData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime });*/
-
-            //Debug.DrawRay(TranslationComponentData[collisionEvent.EntityA].Value, math.normalize(incomingVelocity), Color.yellow);
-            //Debug.DrawRay(collisionEvent.CalculateDetails(ref MyPhysicsWorld).AverageContactPointPosition, normal, Color.blue);
-            //Debug.DrawRay(TranslationComponentData[collisionEvent.EntityA].Value, math.normalize(reflectedVelocity), Color.green);
-
-            //pv.Linear = reflectedVelocity * BallSharedData.Speed;
+            CollisionIds.Add(brickEntity.Index);
+            
+            if (Manager.HasComponent<CannonballTag>(ballEntity))
+            {
+                if (brickData.Health < ballData.Power)
+                {
+                    /*CommandBuffer.SetComponent(ballEntity, 
+                        new PhysicsVelocity{ Linear = math.normalize(Velocities[ballEntity].Linear) * ballData.Speed 
+                            * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime });*/
+                    //Debug.Log("Destroying brick from trigger");
+                    
+                    CollisionIds.RemoveAt(CollisionIds.IndexOf(brickEntity.Index));
+                    CommandBuffer.DestroyEntity(brickEntity);
+                    GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
+                    GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = brickData.Health});
+                    return;
+                    //LevelOverEventQueue.Enqueue(2);
+                }
+            }
+            
+            CollisionIds.RemoveAt(CollisionIds.IndexOf(brickEntity.Index));
         }
     }
 }

@@ -95,8 +95,11 @@ public partial class GlobalDataUpdateSystem : SystemBase
     {
         Entities.ForEach((ref GlobalData globalData) =>
         {
+            Debug.Log("Bricks before " + globalData.Bricks);
             globalData.Bricks = args.NewData;
+            Debug.Log("Bricks after " + globalData.Bricks);
         }).WithoutBurst().Run();
+        World.GetOrCreateSystem<LevelControlSystem>().EventQueue.Enqueue(2);
     }
 }
 

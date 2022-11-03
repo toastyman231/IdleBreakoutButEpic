@@ -12,5 +12,7 @@ public struct PrefabComponent : IComponentData
     public Entity SniperBallPrefab;
     public Entity ScatterBallPrefab;
     public Entity ScatterChildPrefab;
+    public Entity CannonballPrefab;
+    public Entity PoisonBallPrefab;
     public Entity BrickPrefab;
 }

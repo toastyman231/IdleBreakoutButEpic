@@ -38,6 +38,10 @@ public class UpgradeShopControl : MonoBehaviour
         _upgrades.Add("SniperPower", new Upgrade("Power", BallType.SniperBall, 8000, 1.35f, Field.POWER, 5, int.MaxValue, 5));
         _upgrades.Add("ScatterExtraBalls", new Upgrade("Extra Balls", BallType.ScatterBall, 75000, 2.5f, Field.EXTRA, 1, 10));
         _upgrades.Add("ScatterPower", new Upgrade("Power", BallType.ScatterBall, 100000, 1.3f, Field.POWER, 10, int.MaxValue, 10));
+        _upgrades.Add("CannonballSpeed", new Upgrade("Speed", BallType.Cannonball, 100000, 1.5f, Field.SPEED, 4, 16, 2));
+        _upgrades.Add("CannonballPower", new Upgrade("Power", BallType.Cannonball, 150000, 1.25f, Field.POWER, 50, int.MaxValue, 25));
+        _upgrades.Add("PoisonSpeed", new Upgrade("Speed", BallType.PoisonBall, 120000, 1.5f, Field.SPEED, 5, 15, 2));
+        _upgrades.Add("PoisonPower", new Upgrade("Power", BallType.PoisonBall, 50000, 1.2f, Field.POWER, 5, int.MaxValue, 5));
 
         foreach (var upgradeBox in _upgradesPanel.Q<GroupBox>("BallUpgrades").Children())
         {
@@ -75,6 +79,7 @@ public class UpgradeShopControl : MonoBehaviour
         {
             _uiDocument.rootVisualElement.Q<GroupBox>("BackgroundPanel").visible = false;
             OnUIHide();
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = true;
         });
     }
 
@@ -118,6 +123,16 @@ public class UpgradeShopControl : MonoBehaviour
                 entityQuery =
                     World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
                         ComponentType.ReadOnly<ScatterTag>());
+                break;
+            case "Cannonball":
+                entityQuery =
+                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                        ComponentType.ReadOnly<CannonballTag>());
+                break;
+            case "Poison":
+                entityQuery =
+                    World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                        ComponentType.ReadOnly<PoisonTag>());
                 break;
             default:
                 Debug.Log("Error toggling upgrade panel: " + ballType);
@@ -208,7 +223,7 @@ public struct Upgrade
 
             _cost = ReturnCostAsBigInteger(_cost, _increaseAmount);
 
-            data.label.text = _name + "\n" + _currentLevel + " >> " + (_currentLevel + 1);
+            data.label.text = _name + "\n" + _currentLevel + " >> " + (_currentLevel + _stepSize);
             data.button.text = (_currentLevel == _maxLevel) ? "SOLD OUT" : "$" + _cost.NumberFormat();
         }
     }
@@ -265,6 +280,18 @@ public struct Upgrade
                 BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
                 onDelete();
                 return;
+            case BallType.Cannonball:
+                query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<CannonballTag>());
+                count = query.CalculateEntityCount();
+                if (count == 0) return;
+
+                break;
+            case BallType.PoisonBall:
+                query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PoisonTag>());
+                count = query.CalculateEntityCount();
+                if (count == 0) return;
+
+                break;
             default:
                 Debug.Log("Error deleting ball!");
                 return;

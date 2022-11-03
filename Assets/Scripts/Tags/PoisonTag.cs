@@ -5,6 +5,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [Serializable, BurstCompile, GenerateAuthoringComponent]
-public struct DoneSetupTag : IComponentData
+public struct PoisonTag : IComponentData
 {
 }

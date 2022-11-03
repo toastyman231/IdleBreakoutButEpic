@@ -25,6 +25,8 @@ public partial class BallSpawnSystem : SystemBase
     private Entity _plasmaBallPrefab;
     private Entity _sniperBallPrefab;
     private Entity _scatterBallPrefab;
+    private Entity _cannonballPrefab;
+    private Entity _posionBallPrefab;
     private Entity _scatterChildPrefab;
 
     private EntityManager _entityManager;
@@ -41,6 +43,8 @@ public partial class BallSpawnSystem : SystemBase
         _plasmaBallPrefab = prefabComponent.PlasmaBallPrefab;
         _sniperBallPrefab = prefabComponent.SniperBallPrefab;
         _scatterBallPrefab = prefabComponent.ScatterBallPrefab;
+        _cannonballPrefab = prefabComponent.CannonballPrefab;
+        _posionBallPrefab = prefabComponent.PoisonBallPrefab;
         _scatterChildPrefab = prefabComponent.ScatterChildPrefab;
     }
     
@@ -214,6 +218,64 @@ public partial class BallSpawnSystem : SystemBase
                         sharedData.Power = Mathf.FloorToInt(currentData.Power / 2f);
                     }).ScheduleParallel();
                     break;
+                case BallType.Cannonball:
+                    currentCount = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<CannonballTag>())
+                        .CalculateEntityCount();
+                    if (currentCount > 0)
+                    {
+                        Entity basicEntity = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<CannonballTag>())
+                            .ToEntityArray(Allocator.Temp)[0];
+                        BasicBallSharedData curData = EntityManager.GetComponentData<BasicBallSharedData>(basicEntity);
+                        
+                        EntityManager.Instantiate(_cannonballPrefab, numToSpawn[i], Allocator.Temp);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in CannonballTag tag) =>
+                        {
+                            sharedData.Speed = curData.Speed;
+                            sharedData.Power = curData.Power;
+                            sharedData.Cost = curData.Cost;
+                            sharedData.Count = currentCount + amount;
+                        }).ScheduleParallel();
+                    }
+                    else
+                    {
+                        EntityManager.Instantiate(_cannonballPrefab, numToSpawn[i], Allocator.Temp);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in CannonballTag tag) =>
+                        {
+                            sharedData.Count += amount;
+                        }).ScheduleParallel();
+                    }
+                    break;
+                case BallType.PoisonBall:
+                    currentCount = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PoisonTag>())
+                        .CalculateEntityCount();
+                    if (currentCount > 0)
+                    {
+                        Entity basicEntity = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PoisonTag>())
+                            .ToEntityArray(Allocator.Temp)[0];
+                        BasicBallSharedData curData = EntityManager.GetComponentData<BasicBallSharedData>(basicEntity);
+                        
+                        EntityManager.Instantiate(_posionBallPrefab, numToSpawn[i], Allocator.Temp);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in PoisonTag tag) =>
+                        {
+                            sharedData.Speed = curData.Speed;
+                            sharedData.Power = curData.Power;
+                            sharedData.Cost = curData.Cost;
+                            sharedData.Count = currentCount + amount;
+                        }).ScheduleParallel();
+                    }
+                    else
+                    {
+                        EntityManager.Instantiate(_posionBallPrefab, numToSpawn[i], Allocator.Temp);
+                        int amount = numToSpawn[i];
+                        Entities.ForEach((ref BasicBallSharedData sharedData, in PoisonTag tag) =>
+                        {
+                            sharedData.Count += amount;
+                        }).ScheduleParallel();
+                    }
+                    break;
                 default:
                     Debug.Log("Unrecognized Ball Type!");
                     break;
@@ -281,6 +343,8 @@ public enum BallType
     PlasmaBall = 1,
     SniperBall = 2,
     ScatterBall = 3,
+    Cannonball = 4,
+    PoisonBall = 5,
     ScatterChild = 6
 }
 

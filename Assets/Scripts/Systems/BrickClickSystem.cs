@@ -12,6 +12,8 @@ using RaycastHit = Unity.Physics.RaycastHit;
 [AlwaysUpdateSystem, BurstCompile]
 public partial class BrickClickSystem : SystemBase
 {
+    public bool CanClick;
+    
     private Camera _mainCamera;
     private BuildPhysicsWorld _buildPhysicsWorld;
     private CollisionWorld _collisionWorld;
@@ -23,6 +25,7 @@ public partial class BrickClickSystem : SystemBase
     protected override void OnCreate()
     {
         base.OnCreate();
+        CanClick = true;
         _mainCamera = Camera.main;
         _buildPhysicsWorld = World.GetOrCreateSystem<BuildPhysicsWorld>();
     }
@@ -47,6 +50,8 @@ public partial class BrickClickSystem : SystemBase
     [BurstCompile]
     private void Click()
     {
+        if (!CanClick) return;
+        
         _collisionWorld = _buildPhysicsWorld.PhysicsWorld.CollisionWorld;
         _globalData = GetSingleton<GlobalData>();
         _globalDataEventQueue = World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.AsParallelWriter();

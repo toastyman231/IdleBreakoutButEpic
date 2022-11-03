@@ -91,10 +91,12 @@ public class BallShopControl : MonoBehaviour
         if (document.rootVisualElement.Q("BackgroundPanel").visible)
         {
             upgradeControl.OnUIShow();
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = false;
         }
         else
         {
             upgradeControl.OnUIHide();
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = true;
         }
     }
 
@@ -182,6 +184,33 @@ public class BallShopControl : MonoBehaviour
                     cost = BigInteger.Parse(_buyButtons[3].text.Substring(1));
                 }
                 break;
+            case BallType.Cannonball:
+                try
+                {
+                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
+                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<CannonballTag>())
+                            .ToEntityArray(Allocator.Temp)[0]);
+                    cost = BigInteger.Parse(ballData.Cost.ToString());
+                }
+                catch
+                {
+                    Debug.Log(_buyButtons[4].text.Substring(1));
+                    cost = BigInteger.Parse(_buyButtons[4].text.Substring(1));
+                }
+                break;
+            case BallType.PoisonBall:
+                try
+                {
+                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
+                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PoisonTag>())
+                            .ToEntityArray(Allocator.Temp)[0]);
+                    cost = BigInteger.Parse(ballData.Cost.ToString());
+                }
+                catch
+                {
+                    cost = BigInteger.Parse(_buyButtons[5].text.Substring(1));
+                }
+                break;
         }
 
         int maxBalls = 50;
@@ -235,6 +264,18 @@ public class BallShopControl : MonoBehaviour
                 _costIncreases.Enqueue(UpdateCosts(ballType));
                 InvokeBallUpdateEvent(BallType.ScatterBall, 1);
                 break;
+            case "Cannonball":
+                types[0] = BallType.Cannonball;
+                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount, float3.zero);
+                _costIncreases.Enqueue(UpdateCosts(ballType));
+                InvokeBallUpdateEvent(BallType.Cannonball, 1);
+                break;
+            case "PoisonBall":
+                types[0] = BallType.PoisonBall;
+                _world.GetOrCreateSystem<BallSpawnSystem>().SpawnBalls(ref types, ref amount, float3.zero);
+                _costIncreases.Enqueue(UpdateCosts(ballType));
+                InvokeBallUpdateEvent(BallType.PoisonBall, 1);
+                break;
             default:
                 Debug.Log("You fucked something up");
                 break;
@@ -287,6 +328,22 @@ public class BallShopControl : MonoBehaviour
                 newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.35f);
                 _buyButtons[3].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.ScatterBall, false, -1, -1, newCost.ToString(), -1, -1);
+            case "Cannonball":
+                var cannonballQuery = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<CannonballTag>());
+                var cannonballs = cannonballQuery.ToEntityArray(Allocator.Temp);
+                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(cannonballs[^1]).Cost.ToString();
+                newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.3f);
+                _buyButtons[4].text = "$" + newCost.NumberFormat();
+                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.Cannonball, false, -1, -1, newCost.ToString(), -1);
+            case "PoisonBall":
+                var poisonBallQuery = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<PoisonTag>());
+                var poisonBalls = poisonBallQuery.ToEntityArray(Allocator.Temp);
+                cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(poisonBalls[^1]).Cost.ToString();
+                newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.25f);
+                _buyButtons[5].text = "$" + newCost.NumberFormat();
+                return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.PoisonBall, false, -1, -1, newCost.ToString(), -1);
             default:
                 return () => Debug.Log("Unrecognized ball type!");
         }
@@ -318,6 +375,12 @@ public class BallShopControl : MonoBehaviour
                 break;
             case BallType.ScatterBall:
                 ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ScatterTag>());
+                break;
+            case BallType.Cannonball:
+                ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<CannonballTag>());
+                break;
+            case BallType.PoisonBall:
+                ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PoisonTag>());
                 break;
             default:
                 Debug.Log("Default case");

@@ -34,6 +34,7 @@ public partial class LevelControlSystem : SystemBase
     {
         base.OnStartRunning();
         // TODO: Make more levels
+        //World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(new GlobalDataEventArgs{ EventType = Field.LEVEL, NewData = 10 });
         LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/Level1").positions);
     }
 
