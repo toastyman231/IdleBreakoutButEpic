@@ -11,12 +11,16 @@ using UnityEngine.UIElements;
 
 public class UpgradeShopControl : MonoBehaviour
 {
+    [SerializeField] private UIDocument prestigeDocument;
+    
     private Dictionary<string, Label> _labels;
     private Dictionary<string, Upgrade> _upgrades;
     private Dictionary<string, Button> _buttons;
     private List<VisualElement> _upgradeContainers;
 
     private GroupBox _upgradesPanel;
+    private Button _upgradeButton;
+    private Button _prestigeButton;
 
     private UIDocument _uiDocument;
 
@@ -81,6 +85,33 @@ public class UpgradeShopControl : MonoBehaviour
             OnUIHide();
             World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = true;
         });
+
+        _upgradeButton = _uiDocument.rootVisualElement.Q<Button>("UpgradesTabButton");
+        _prestigeButton = _uiDocument.rootVisualElement.Q<Button>("PrestigeTabButton");
+        _upgradeButton.RegisterCallback<ClickEvent, UIDocument>(SwitchToPanel, _uiDocument);
+        _prestigeButton.RegisterCallback<ClickEvent, UIDocument>(SwitchToPanel, prestigeDocument);
+    }
+
+    private void OnDestroy()
+    {
+        _upgradeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
+        _prestigeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
+    }
+
+    private void SwitchToPanel(ClickEvent evt, UIDocument document)
+    {
+        if (document.rootVisualElement.Q("BackgroundPanel").visible) return;
+
+            _uiDocument.rootVisualElement.Q("BackgroundPanel").visible = false;
+        prestigeDocument.rootVisualElement.Q("BackgroundPanel").visible = false;
+
+        document.rootVisualElement.Q("BackgroundPanel").visible = true;
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = false;
+
+        if (document.name.ToLower().Contains("upgrade") && document.rootVisualElement.Q("BackgroundPanel").visible)
+        {
+            OnUIShow();
+        }
     }
 
     public void OnUIShow()

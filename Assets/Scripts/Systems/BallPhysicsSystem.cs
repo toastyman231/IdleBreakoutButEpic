@@ -30,8 +30,6 @@ public partial class BallPhysicsSystem : SystemBase
 
     private NativeList<int> _collisionEventIds;
 
-    // TODO: Handle all of this stuff in each Ball's UpdateSystem
-    
     [BurstCompile]
     protected override void OnCreate()
     {

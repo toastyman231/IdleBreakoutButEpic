@@ -16,6 +16,8 @@ public partial class GlobalDataUpdateSystem : SystemBase
     public event EventHandler<GlobalDataEventClass> UpdateClicksEvent;
     public event EventHandler<GlobalDataEventClass> UpdateMoneyEvent;
     public event EventHandler<GlobalDataEventClass> UpdateBricksEvent;
+    public event EventHandler<GlobalDataEventClass> UpdateCashBonusEvent;
+    public event EventHandler<GlobalDataEventClass> UpdateGlobalSpeedEvent;
     public NativeQueue<GlobalDataEventArgs> EventQueue;
 
     private MoneySystem _moneySystem;
@@ -27,6 +29,8 @@ public partial class GlobalDataUpdateSystem : SystemBase
         UpdateMoneyEvent += UpdateGlobalMoney;
         UpdateBricksEvent += UpdateGlobalBricks;
         UpdateClicksEvent += UpdateGlobalClicks;
+        UpdateCashBonusEvent += UpdateGlobalCashBonus;
+        UpdateGlobalSpeedEvent += UpdateGlobalSpeedIncrease;
 
         _moneySystem = World.GetOrCreateSystem<MoneySystem>();
     }
@@ -38,6 +42,8 @@ public partial class GlobalDataUpdateSystem : SystemBase
         UpdateMoneyEvent -= UpdateGlobalMoney;
         UpdateBricksEvent -= UpdateGlobalBricks;
         UpdateClicksEvent -= UpdateGlobalClicks;
+        UpdateCashBonusEvent -= UpdateGlobalCashBonus;
+        UpdateGlobalSpeedEvent -= UpdateGlobalSpeedIncrease;
     }
 
     protected override void OnUpdate()
@@ -57,6 +63,12 @@ public partial class GlobalDataUpdateSystem : SystemBase
                     break;
                 case Field.CLICKX:
                     UpdateClicksEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
+                    break;
+                case Field.CASHBONUS:
+                    UpdateCashBonusEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
+                    break;
+                case Field.SPEED:
+                    UpdateGlobalSpeedEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
                     break;
             }
         }
@@ -101,6 +113,22 @@ public partial class GlobalDataUpdateSystem : SystemBase
         }).WithoutBurst().Run();
         World.GetOrCreateSystem<LevelControlSystem>().EventQueue.Enqueue(2);
     }
+
+    private void UpdateGlobalCashBonus(object sender, GlobalDataEventClass args)
+    {
+        Entities.ForEach((ref GlobalData globalData) =>
+        {
+            globalData.CashBonus = args.NewData;
+        }).WithoutBurst().Run();
+    }
+
+    private void UpdateGlobalSpeedIncrease(object sender, GlobalDataEventClass args)
+    {
+        Entities.ForEach((ref GlobalData globalData) =>
+        {
+            globalData.GlobalSpeed = args.NewData;
+        }).WithoutBurst().Run();
+    }
 }
 
 public class GlobalDataEventClass : EventArgs
@@ -120,6 +148,7 @@ public enum Field
     MONEY,
     LEVEL,
     BRICKS,
+    CASHBONUS,
     CLICKX,
     POWER,
     SPEED,

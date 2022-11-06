@@ -1,0 +1,45 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:GroupBox name="BackgroundPanel" style="height: 870px; background-color: rgb(204, 195, 150); top: 165px; width: 1842px; left: 35px; visibility: hidden;">
+        <ui:GroupBox name="TabButtons" style="height: 96px; flex-direction: row; justify-content: center; padding-right: 0; align-items: center; flex-shrink: 0; flex-grow: 0;">
+            <ui:Button text="UPGRADES" display-tooltip-when-elided="true" name="UpgradesTabButton" style="width: 475px; height: 75px; color: rgb(0, 0, 0); font-size: 65px;" />
+            <ui:VisualElement name="Spacer" style="width: 25px;" />
+            <ui:Button text="PRESTIGE" display-tooltip-when-elided="true" name="PrestigeTabButton" style="width: 475px; height: 75px; color: rgb(0, 0, 0); font-size: 65px;" />
+        </ui:GroupBox>
+        <ui:GroupBox name="PrestigePanel" style="justify-content: flex-start; flex-direction: column; flex-wrap: nowrap; align-items: stretch; flex-basis: auto;">
+            <ui:GroupBox name="ClaimPanel" style="align-items: center; justify-content: flex-start; height: 351px;">
+                <ui:Label text="Next Gold at Level 20" display-tooltip-when-elided="true" name="NextLabel" style="color: rgb(0, 0, 0); font-size: 24px;" />
+                <ui:GroupBox name="ClaimBox" style="border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; width: 30%; height: 54%; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgb(253, 251, 218); align-items: center; justify-content: space-around;">
+                    <ui:Label text="CLAIM 0 GOLD ON RESET" display-tooltip-when-elided="true" name="ClaimText" style="align-items: stretch; color: rgb(0, 0, 0); font-size: 40px; flex-wrap: nowrap; white-space: normal; -unity-text-align: upper-center;" />
+                    <ui:Button text="Claim" display-tooltip-when-elided="true" name="ClaimButton" style="color: rgb(0, 0, 0); font-size: 35px; width: 225px; height: 46px;" />
+                </ui:GroupBox>
+                <ui:GroupBox name="GoldBox" style="border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-top-left-radius: 14px; border-bottom-left-radius: 14px; border-top-right-radius: 14px; border-bottom-right-radius: 14px; width: 175px; height: 75px; top: 21px; background-color: rgb(253, 251, 218); align-items: center; justify-content: center;">
+                    <ui:GroupBox name="GoldChild" style="border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; height: 55px; width: 150px; left: -2px; top: -2px; background-color: rgb(255, 199, 0);">
+                        <ui:Label text="1" display-tooltip-when-elided="true" name="GoldText" style="-unity-text-align: middle-center; font-size: 46px; color: rgb(0, 0, 0);" />
+                    </ui:GroupBox>
+                </ui:GroupBox>
+            </ui:GroupBox>
+            <ui:GroupBox name="UpgradesBox" style="height: 238px; flex-direction: row; justify-content: space-around;">
+                <ui:GroupBox name="CashBonusContainer" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">
+                    <ui:Label text="Level&#10;Complete&#10;Cash Bonus&#10;50%" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 140px; -unity-font-style: bold;" />
+                    <ui:Button text="2 GOLD" display-tooltip-when-elided="true" name="CashBonusBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                </ui:GroupBox>
+                <ui:GroupBox name="SpeedIncreaseContainer" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">
+                    <ui:Label text="Ball Speed&#10;Increase&#10;1x &gt;&gt; 2x" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 140px; -unity-font-style: bold;" />
+                    <ui:Button text="5 GOLD" display-tooltip-when-elided="true" name="SpeedIncreaseBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                </ui:GroupBox>
+                <ui:GroupBox name="BallPowerContainer" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">
+                    <ui:Label text="Ball Power&#10;Multiplier&#10;1x &gt;&gt; 2x" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 140px; -unity-font-style: bold;" />
+                    <ui:Button text="5 GOLD" display-tooltip-when-elided="true" name="BallPowerBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                </ui:GroupBox>
+                <ui:GroupBox name="MaxBallsContainer" style="width: 227px; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);">
+                    <ui:Label text="Maximum&#10;Number of&#10;Balls&#10;50 &gt;&gt; 60" display-tooltip-when-elided="true" name="UpgradeLabel" style="-unity-text-align: middle-center; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 25px; height: 140px; -unity-font-style: bold;" />
+                    <ui:Button text="4 GOLD" display-tooltip-when-elided="true" name="MaxBallsBuyButton" style="color: rgb(0, 0, 0); font-size: 36px; height: 48px;" />
+                </ui:GroupBox>
+            </ui:GroupBox>
+        </ui:GroupBox>
+        <ui:GroupBox name="CloseContainer" style="align-items: center; justify-content: center;">
+            <ui:Label text="Each prestige gives you $50 bonus start money." display-tooltip-when-elided="true" style="color: rgb(0, 0, 0); font-size: 25px;" />
+            <ui:Button text="CLOSE" display-tooltip-when-elided="true" name="CloseButton" style="width: 250px; height: 60px; align-items: center; justify-content: center; color: rgb(0, 0, 0); font-size: 50px;" />
+        </ui:GroupBox>
+    </ui:GroupBox>
+</ui:UXML>

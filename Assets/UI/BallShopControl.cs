@@ -17,11 +17,13 @@ public class BallShopControl : MonoBehaviour
     public static event EventHandler LevelLoadEvent;
 
     [SerializeField] private UIDocument upgradeDocument;
+    [SerializeField] private UIDocument prestigeDocument;
     [SerializeField] private UpgradeShopControl upgradeControl;
 
     private Dictionary<string, string> _ballTypeLookup;
     private Button[] _buyButtons;
     private Button _upgradeButton;
+    private Button _prestigeButton;
     private VisualElement[] _hoverElements;
     private VisualElement _uiBar;
     private Label _moneyText;
@@ -78,25 +80,37 @@ public class BallShopControl : MonoBehaviour
         }
 
         _upgradeButton = _uiBar.Q<GroupBox>("StoreButtonsContainer").Q<Button>("UpgradesButton");
-        _upgradeButton.RegisterCallback<ClickEvent, UIDocument>(ToggleUIPanel, upgradeDocument);
+        _upgradeButton.RegisterCallback<ClickEvent, UIDocument>(SwitchToPanel, upgradeDocument);
+        _prestigeButton = _uiBar.Q<GroupBox>("StoreButtonsContainer").Q<Button>("PrestigeButton"); //Check this
+        _prestigeButton.RegisterCallback<ClickEvent, UIDocument>(SwitchToPanel, prestigeDocument);
 
         InvokeIncreaseMoneyEvent();
     }
 
-    private void ToggleUIPanel(ClickEvent evt, UIDocument document)
+    private void SwitchToPanel(ClickEvent evt, UIDocument document)
     {
-        document.rootVisualElement.Q("BackgroundPanel").visible =
-            !document.rootVisualElement.Q("BackgroundPanel").visible;
-
         if (document.rootVisualElement.Q("BackgroundPanel").visible)
         {
-            upgradeControl.OnUIShow();
-            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = false;
-        }
-        else
-        {
-            upgradeControl.OnUIHide();
+            document.rootVisualElement.Q("BackgroundPanel").visible = false;
+            
+            if (document.name.ToLower().Contains("upgrade"))
+            {
+                upgradeControl.OnUIHide();
+            }
+            
             World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = true;
+            return;
+        }
+        
+        upgradeDocument.rootVisualElement.Q("BackgroundPanel").visible = false;
+        prestigeDocument.rootVisualElement.Q("BackgroundPanel").visible = false;
+
+        document.rootVisualElement.Q("BackgroundPanel").visible = true;
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = false;
+
+        if (document.name.ToLower().Contains("upgrade") && document.rootVisualElement.Q("BackgroundPanel").visible)
+        {
+            upgradeControl.OnUIShow();
         }
     }
 
@@ -107,7 +121,8 @@ public class BallShopControl : MonoBehaviour
         BallUpdateEvent -= OnBallUpdate;
         LevelLoadEvent -= OnLevelLoad;
         
-        _upgradeButton.UnregisterCallback<ClickEvent, UIDocument>(ToggleUIPanel);
+        _upgradeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
+        _prestigeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
 
         foreach (var button in _buyButtons)
         {
