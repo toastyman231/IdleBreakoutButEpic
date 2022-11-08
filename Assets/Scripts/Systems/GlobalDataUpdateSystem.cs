@@ -18,6 +18,8 @@ public partial class GlobalDataUpdateSystem : SystemBase
     public event EventHandler<GlobalDataEventClass> UpdateBricksEvent;
     public event EventHandler<GlobalDataEventClass> UpdateCashBonusEvent;
     public event EventHandler<GlobalDataEventClass> UpdateGlobalSpeedEvent;
+    public event EventHandler<GlobalDataEventClass> UpdateGlobalPowerEvent;
+    public event EventHandler<GlobalDataEventClass> UpdateGlobalBallsEvent;
     public NativeQueue<GlobalDataEventArgs> EventQueue;
 
     private MoneySystem _moneySystem;
@@ -31,6 +33,8 @@ public partial class GlobalDataUpdateSystem : SystemBase
         UpdateClicksEvent += UpdateGlobalClicks;
         UpdateCashBonusEvent += UpdateGlobalCashBonus;
         UpdateGlobalSpeedEvent += UpdateGlobalSpeedIncrease;
+        UpdateGlobalPowerEvent += UpdateGlobalPower;
+        UpdateGlobalBallsEvent += UpdateGlobalBalls;
 
         _moneySystem = World.GetOrCreateSystem<MoneySystem>();
     }
@@ -44,6 +48,8 @@ public partial class GlobalDataUpdateSystem : SystemBase
         UpdateClicksEvent -= UpdateGlobalClicks;
         UpdateCashBonusEvent -= UpdateGlobalCashBonus;
         UpdateGlobalSpeedEvent -= UpdateGlobalSpeedIncrease;
+        UpdateGlobalPowerEvent -= UpdateGlobalPower;
+        UpdateGlobalBallsEvent -= UpdateGlobalBalls;
     }
 
     protected override void OnUpdate()
@@ -69,6 +75,12 @@ public partial class GlobalDataUpdateSystem : SystemBase
                     break;
                 case Field.SPEED:
                     UpdateGlobalSpeedEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
+                    break;
+                case Field.POWER:
+                    UpdateGlobalPowerEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
+                    break;
+                case Field.BALLS:
+                    UpdateGlobalBallsEvent?.Invoke(this, new GlobalDataEventClass{EventType = args.EventType, NewData = args.NewData});
                     break;
             }
         }
@@ -129,6 +141,22 @@ public partial class GlobalDataUpdateSystem : SystemBase
             globalData.GlobalSpeed = args.NewData;
         }).WithoutBurst().Run();
     }
+    
+    private void UpdateGlobalPower(object sender, GlobalDataEventClass args)
+    {
+        Entities.ForEach((ref GlobalData globalData) =>
+        {
+            globalData.PowerMultiplier = args.NewData;
+        }).WithoutBurst().Run();
+    }
+    
+    private void UpdateGlobalBalls(object sender, GlobalDataEventClass args)
+    {
+        Entities.ForEach((ref GlobalData globalData) =>
+        {
+            globalData.MaxBalls = args.NewData;
+        }).WithoutBurst().Run();
+    }
 }
 
 public class GlobalDataEventClass : EventArgs
@@ -153,5 +181,6 @@ public enum Field
     POWER,
     SPEED,
     RANGE,
-    EXTRA
+    EXTRA,
+    BALLS
 }

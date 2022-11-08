@@ -50,7 +50,7 @@ public partial class BallPhysicsSystem : SystemBase
     [BurstCompile]
     protected override void OnStartRunning()
     {
-        this.RegisterPhysicsRuntimeSystemReadWrite();
+        //this.RegisterPhysicsRuntimeSystemReadWrite();
     }
 
     [BurstCompile]

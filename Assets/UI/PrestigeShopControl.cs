@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Unity.Entities;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 public class PrestigeShopControl : MonoBehaviour
@@ -30,9 +31,9 @@ public class PrestigeShopControl : MonoBehaviour
                 i => (int)((5f/2f) * Mathf.Pow(2, i + 1)), 0, 9));
         _upgrades.Add("BallPower", 
             new PrestigeUpgrade("Ball Power\nMultiplier", "BallPower", 5, 
-                i => (int)((5f/2f) * Mathf.Pow(2, i + 1)), 0, int.MaxValue));
+                i => (int)((5f/2f) * Mathf.Pow(2, i + 1)), 0, 18));
         _upgrades.Add("MaxBalls", 
-            new PrestigeUpgrade("Maximum\nNumber of\nBalls", "MaxBalls", 4, i => (int)(i * 1.5f), 0, int.MaxValue));
+            new PrestigeUpgrade("Maximum\nNumber of\nBalls", "MaxBalls", 4, i => (int)(i * 1.5f), 0, 32));
         
         _uiDocument.rootVisualElement.Q<Label>("GoldText").text = PlayerPrefs.GetString("gold", "0");
         
@@ -58,12 +59,15 @@ public class PrestigeShopControl : MonoBehaviour
             upgradeButton.text = _upgrades[key].GetCost();
             upgradeButton.RegisterCallback<ClickEvent, UpgradeEventData>(_upgrades[key].LevelUp, new UpgradeEventData(upgradeButton, upgradeLabel));
         }
+        
+        _uiDocument.rootVisualElement.Q<Button>("ClaimButton").RegisterCallback<ClickEvent>(ClaimAndPrestige);
     }
 
     private void OnDestroy()
     {
         _upgradeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
         _prestigeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
+        _uiDocument.rootVisualElement.Q<Button>("ClaimButton").UnregisterCallback<ClickEvent>(ClaimAndPrestige);
         
         foreach (var upgradeBox in _upgradesBox.Children())
         {
@@ -86,6 +90,23 @@ public class PrestigeShopControl : MonoBehaviour
         {
             upgradeControl.OnUIShow();
         }
+    }
+
+    private void ClaimAndPrestige(ClickEvent evt)
+    {
+        if (World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().GoldToClaim == 0) return;
+        
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().Gold +=
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().GoldToClaim;
+        
+        PlayerPrefs.SetString("gold", World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().Gold.ToString());
+        PlayerPrefs.Save();
+
+        EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        EntityQuery destroyQuery = manager.CreateEntityQuery(ComponentType.Exclude<DontDestroyTag>());
+        manager.DestroyEntity(manager.UniversalQuery);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
     }
 
     // Update is called once per frame
@@ -115,7 +136,7 @@ public class PrestigeUpgrade
         _type = type;
         _currentLevel = PlayerPrefs.GetInt(type + "Level", startLevel);
         IncreaseCost = increaseFunc;
-        _cost = IncreaseCost(_currentLevel);
+        _cost = (_type == "MaxBalls") ? PlayerPrefs.GetInt(type + "Cost", initialCost) : IncreaseCost(_currentLevel);
         _startLevel = startLevel;
         _maxLevel = maxLevel;
         if (_currentLevel == _startLevel) _cost = initialCost;
@@ -123,7 +144,8 @@ public class PrestigeUpgrade
 
     public string GetCost()
     {
-        return _currentLevel == _maxLevel ? "SOLD OUT" : _cost.ToString() + " GOLD";
+        int cost = (_type == "MaxBalls") ? PlayerPrefs.GetInt(_type + "Cost", (int)_cost) : (int)IncreaseCost(_currentLevel);
+        return _currentLevel == _maxLevel ? "SOLD OUT" : cost.ToString() + " GOLD";
     }
 
     public string GetLabelText()
@@ -142,6 +164,14 @@ public class PrestigeUpgrade
                 if (_currentLevel == _startLevel) currentValue = 1; 
                 if (_currentLevel == _startLevel) nextLevelValue = 2; 
                 return _name + "\n" + currentValue + "x" + " >> " + nextLevelValue + "x";
+            case "BallPower":
+                currentValue = (int)Mathf.Pow(2, _currentLevel);
+                nextLevelValue = (int)Mathf.Pow(2, _currentLevel + 1);
+                return _name + "\n" + currentValue + "x" + " >> \n" + nextLevelValue + "x";
+            case "MaxBalls":
+                currentValue = 10 * _currentLevel + 50;
+                nextLevelValue = 10 * (_currentLevel + 1) + 50;
+                return _name + "\n" + currentValue + " >> " + nextLevelValue;
             default:
                 return "Something went wrong calculating label text for " + _name;
         }
@@ -154,8 +184,7 @@ public class PrestigeUpgrade
         World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().Gold -= _cost;
 
         _currentLevel++;
-        _cost = IncreaseCost(_currentLevel);
-        Debug.Log((int)((5f/2f) * Mathf.Pow(2, _currentLevel)));
+        _cost = (_type == "MaxBalls") ? IncreaseCost((int)_cost) : IncreaseCost(_currentLevel);
 
         //GlobalData globalData = World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>()
            // .GetSingleton<GlobalData>();
@@ -175,12 +204,23 @@ public class PrestigeUpgrade
                     new GlobalDataEventArgs{EventType = Field.SPEED, NewData = currentValue});
                 // TODO: Update balls with their new speed
                 break;
+            case "BallPower":
+                currentValue = (int)Mathf.Pow(2, _currentLevel);
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(
+                    new GlobalDataEventArgs{EventType = Field.POWER, NewData = currentValue});
+                break;
+            case "MaxBalls":
+                currentValue = 10 * _currentLevel + 50;
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(
+                    new GlobalDataEventArgs{EventType = Field.BALLS, NewData = currentValue});
+                break;
             default:
-                Debug.Log("Error levelling up prestige upgrade: " + _name);
+                Debug.Log("Error levelling up prestige upgrade: " + _name); 
                 break;
         }
         
         PlayerPrefs.SetInt(_type + "Level", _currentLevel);
+        if (_type == "MaxBalls") PlayerPrefs.SetInt(_type + "Cost", (int)_cost);
         PlayerPrefs.SetString("gold", World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().Gold.ToString());
         PlayerPrefs.Save();
 

@@ -45,6 +45,7 @@ public class BallShopControl : MonoBehaviour
         _moneySystem = _world.GetOrCreateSystem<MoneySystem>();
         _dataQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<GlobalData>());
         _ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<BasicBallSharedData>());
+        _world.GetOrCreateSystem<GlobalDataUpdateSystem>().UpdateGlobalBallsEvent += OnBallUpdate;
         IncreaseMoneyEvent += UpdateButtons;
         IncreaseMoneyEvent += UpdateMoneyText;
         BallUpdateEvent += OnBallUpdate;
@@ -114,12 +115,21 @@ public class BallShopControl : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.
+            Enqueue(new GlobalDataEventArgs{EventType = Field.BALLS, NewData = 10 * PlayerPrefs.GetInt("MaxBallsLevel", 0) + 50});
+        //OnBallUpdate(this, new EventData(BallType.BasicBall, 0));
+    }
+
     private void OnDestroy()
     {
         IncreaseMoneyEvent -= UpdateButtons;
         IncreaseMoneyEvent -= UpdateMoneyText;
         BallUpdateEvent -= OnBallUpdate;
         LevelLoadEvent -= OnLevelLoad;
+        
+        _world.GetOrCreateSystem<GlobalDataUpdateSystem>().UpdateGlobalBallsEvent -= OnBallUpdate;
         
         _upgradeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
         _prestigeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
@@ -458,6 +468,15 @@ public class BallShopControl : MonoBehaviour
         int currentBalls = int.Parse(ballText.text.Substring(0, ballText.text.IndexOf("/")));
         ballText.text = currentBalls + args.index + "/" + globalData.MaxBalls + "\nBalls";
         ballText.style.color = currentBalls + args.index == globalData.MaxBalls ? new StyleColor(Color.red) : new StyleColor(Color.black);
+    }
+    
+    private void OnBallUpdate(object sender, GlobalDataEventClass args)
+    {
+        Label ballText = _uiBar.Q<Label>("BallLabel");
+        GlobalData globalData = _moneySystem.GetSingleton<GlobalData>();
+        int currentBalls = int.Parse(ballText.text.Substring(0, ballText.text.IndexOf("/")));
+        ballText.text = currentBalls + "/" + globalData.MaxBalls + "\nBalls";
+        ballText.style.color = currentBalls == globalData.MaxBalls ? new StyleColor(Color.red) : new StyleColor(Color.black);
     }
 
     private void OnLevelLoad(object sender, EventArgs args)
