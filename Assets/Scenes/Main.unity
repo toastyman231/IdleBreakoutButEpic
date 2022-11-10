@@ -725,6 +725,8 @@ MonoBehaviour:
     type: 3}
   PoisonBallPrefab: {fileID: 1900180632167706210, guid: 27b82ef8775aeb540b8bdfa40f397d8a,
     type: 3}
+  GoldBrickPrefab: {fileID: 3244115376689041262, guid: 202acbe5659bc1d4eaefc9423d5d90e9,
+    type: 3}
   BrickPrefab: {fileID: 3244115376689041262, guid: 5d847adfb32bcc24297d4ff210da9101,
     type: 3}
 --- !u!1 &619606461

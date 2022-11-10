@@ -70,15 +70,24 @@ public partial class BrickClickSystem : SystemBase
                 var brickData = EntityManager.GetComponentData<BrickData>(hitEntity);
                 //Debug.Log("Brick location: " + brickData.Position);
                 //Debug.Log("Entity: " + hitEntity.Index);
-                int newHealth = brickData.Health - _globalData.ClickX * _globalData.PowerMultiplier;
-                EntityManager.SetComponentData<BrickData>(hitEntity, new BrickData{Health = newHealth, Position = brickData.Position});
+                int damage = _globalData.ClickX * _globalData.PowerMultiplier;
+                if (brickData.Poisoned) damage *= 2;
+                int newHealth = brickData.Health - damage;
+                EntityManager.SetComponentData<BrickData>(hitEntity, new BrickData{Health = newHealth, Position = brickData.Position, Poisoned = brickData.Poisoned});
                 
                 if (newHealth <= 0)
                 {
                     EntityManager.DestroyEntity(hitEntity);
+
+                    if (_globalData.CurrentLevel % 20 == 0)
+                    {
+                        World.GetOrCreateSystem<MoneySystem>().GoldToClaim +=
+                            World.GetOrCreateSystem<MoneySystem>().GoldStep;
+                    }
+                    
                     _globalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = _globalData.Bricks - 1});
-                    _globalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = _globalData.ClickX});
-                    _levelOverEventQueue.Enqueue(1);
+                    _globalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = brickData.Health});
+                    //_levelOverEventQueue.Enqueue(1);
                 }
             }
         }

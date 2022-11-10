@@ -71,7 +71,9 @@ public partial class BallPhysicsSystem : SystemBase
             World.GetOrCreateSystem<LevelControlSystem>().EventQueue.AsParallelWriter();
         NativeQueue<SpawnEventArgs>.ParallelWriter spawnEventQueueParallelWriter =
             World.GetOrCreateSystem<BallSpawnSystem>().SpawnBallEventQueue.AsParallelWriter();
-        
+        NativeQueue<int>.ParallelWriter updateGoldEventQueue =
+            World.GetOrCreateSystem<MoneySystem>().GoldStepEventQueue.AsParallelWriter();
+
         new CannonballPhysicsJob
         {
             Manager = _entityManager,
@@ -86,6 +88,7 @@ public partial class BallPhysicsSystem : SystemBase
             BrickDatas = GetComponentDataFromEntity<BrickData>(),
             CollisionIds = _collisionEventIds,
             GlobalDataEventQueue = globalDataEventQueueParallelWriter,
+            UpdateGoldEventQueue = updateGoldEventQueue,
             LevelOverEventQueue = levelOverEventQueueParallelWriter
         }.Schedule(_stepPhysicsWorldSystem.Simulation, Dependency).Complete();
         
@@ -114,6 +117,7 @@ public partial class BallPhysicsSystem : SystemBase
             CollisionIds = _collisionEventIds,
             GlobalDataEventQueue = globalDataEventQueueParallelWriter,
             SpawnEventQueue = spawnEventQueueParallelWriter,
+            UpdateGoldEventQueue = updateGoldEventQueue,
             LevelOverEventQueue = levelOverEventQueueParallelWriter
         }.Schedule(_stepPhysicsWorldSystem.Simulation, Dependency).Complete();
         //_endSimECBSystem.AddJobHandleForProducer(basicJob);
@@ -171,6 +175,7 @@ public partial class BallPhysicsSystem : SystemBase
         public NativeList<int> CollisionIds;
         public NativeQueue<GlobalDataEventArgs>.ParallelWriter GlobalDataEventQueue;
         public NativeQueue<SpawnEventArgs>.ParallelWriter SpawnEventQueue;
+        public NativeQueue<int>.ParallelWriter UpdateGoldEventQueue;
 
         public NativeQueue<int>.ParallelWriter LevelOverEventQueue;
 
@@ -306,6 +311,12 @@ public partial class BallPhysicsSystem : SystemBase
                     if (curHealth - damage <= 0)
                     {
                         CommandBuffer.DestroyEntity(hit.Entity);
+                        
+                        if (GlobalData.CurrentLevel % 20 == 0)
+                        {
+                            UpdateGoldEventQueue.Enqueue(0);
+                        }
+                        
                         GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
                         GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = curHealth});
                         //LevelOverEventQueue.Enqueue(2);
@@ -325,6 +336,12 @@ public partial class BallPhysicsSystem : SystemBase
             {
                 CollisionIds.RemoveAt(CollisionIds.IndexOf(brickEntity.Index));
                 CommandBuffer.DestroyEntity(brickEntity);
+                
+                if (GlobalData.CurrentLevel % 20 == 0)
+                {
+                    UpdateGoldEventQueue.Enqueue(0);
+                }
+                
                 GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
                 GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = brickData.Health});
                 return;
@@ -382,6 +399,7 @@ public partial class BallPhysicsSystem : SystemBase
         public NativeList<int> CollisionIds; 
 
         public NativeQueue<GlobalDataEventArgs>.ParallelWriter GlobalDataEventQueue;
+        public NativeQueue<int>.ParallelWriter UpdateGoldEventQueue;
         public NativeQueue<int>.ParallelWriter LevelOverEventQueue;
 
         public void Execute(TriggerEvent triggerEvent)
@@ -414,6 +432,12 @@ public partial class BallPhysicsSystem : SystemBase
                     
                     CollisionIds.RemoveAt(CollisionIds.IndexOf(brickEntity.Index));
                     CommandBuffer.DestroyEntity(brickEntity);
+                    
+                    if (GlobalData.CurrentLevel % 20 == 0)
+                    {
+                        UpdateGoldEventQueue.Enqueue(0);
+                    }
+                    
                     GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.BRICKS, NewData = GlobalData.Bricks - 1});
                     GlobalDataEventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.MONEY, NewData = brickData.Health});
                     return;

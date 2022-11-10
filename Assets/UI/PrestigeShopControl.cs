@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
+using Systems;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,6 +10,8 @@ using UnityEngine.UIElements;
 
 public class PrestigeShopControl : MonoBehaviour
 {
+    public static event EventHandler PrestigeEvent;
+    
     [SerializeField] private UIDocument upgradeDocument;
     [SerializeField] private UpgradeShopControl upgradeControl;
 
@@ -75,7 +78,7 @@ public class PrestigeShopControl : MonoBehaviour
             upgradeBox.Q<Button>().UnregisterCallback<ClickEvent, UpgradeEventData>(_upgrades[key].LevelUp);
         }
     }
-    
+
     private void SwitchToPanel(ClickEvent evt, UIDocument document)
     {
         if (document.rootVisualElement.Q("BackgroundPanel").visible) return;
@@ -90,6 +93,10 @@ public class PrestigeShopControl : MonoBehaviour
         {
             upgradeControl.OnUIShow();
         }
+        else
+        {
+            upgradeControl.OnUIHide();
+        }
     }
 
     private void ClaimAndPrestige(ClickEvent evt)
@@ -98,15 +105,45 @@ public class PrestigeShopControl : MonoBehaviour
         
         World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().Gold +=
             World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().GoldToClaim;
-        
+
+        int prestiges = PlayerPrefs.GetInt("prestiges", 0);
+        PlayerPrefs.SetInt("prestiges", prestiges + 1);
         PlayerPrefs.SetString("gold", World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().Gold.ToString());
         PlayerPrefs.Save();
 
         EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
-        EntityQuery destroyQuery = manager.CreateEntityQuery(ComponentType.Exclude<DontDestroyTag>());
-        manager.DestroyEntity(manager.UniversalQuery);
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
+        EntityQuery destroyQuery = manager.CreateEntityQuery(ComponentType.ReadOnly<BasicBallSharedData>());
+        EntityQuery destroyBricks = manager.CreateEntityQuery(ComponentType.ReadOnly<BrickTag>());
+        manager.DestroyEntity(destroyBricks);
+        manager.DestroyEntity(destroyQuery);
+        BallShopControl.InvokeBallUpdateEvent(BallType.BasicBall, 0);
+        
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().Money = BigInteger.Zero;
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>().GoldToClaim = BigInteger.Zero;
+        
+        BallShopControl.InvokeIncreaseMoneyEvent();
+        _uiDocument.rootVisualElement.Q<Label>("ClaimText").text = "CLAIM 0 GOLD ON RESET";
+        
+        Entity globalEntity = manager.CreateEntityQuery(ComponentType.ReadOnly<GlobalData>()).GetSingletonEntity();
+        GlobalData globalData = World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>()
+            .GetSingleton<GlobalData>();
+        manager.SetComponentData(globalEntity, new GlobalData
+        {
+            CashBonus = globalData.CashBonus,
+            ClickX = 1,
+            CurrentLevel =  1,
+            GlobalSpeed = globalData.GlobalSpeed,
+            MaxBalls = globalData.MaxBalls,
+            PowerMultiplier = globalData.PowerMultiplier,
+            SpeedScale = globalData.SpeedScale
+        });
+        
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<LevelControlSystem>().LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/Level1").positions);
+        PrestigeEvent?.Invoke(this, EventArgs.Empty);
+        
+        _uiDocument.rootVisualElement.Q<GroupBox>("BackgroundPanel").visible = false;
+        World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BrickClickSystem>().CanClick = true;
+        //SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
     }
 
     // Update is called once per frame
@@ -116,6 +153,14 @@ public class PrestigeShopControl : MonoBehaviour
         {
             _uiDocument.rootVisualElement.Q<Label>("GoldText").text = World.DefaultGameObjectInjectionWorld
                 .GetOrCreateSystem<MoneySystem>().Gold.ToString();
+            _uiDocument.rootVisualElement.Q<Label>("ClaimText").text = "CLAIM " + World.DefaultGameObjectInjectionWorld
+                .GetOrCreateSystem<MoneySystem>().GoldToClaim + " GOLD ON RESET";
+
+            int currentLevel = World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<MoneySystem>()
+                .GetSingleton<GlobalData>().CurrentLevel;
+            int nextGoldLevel = Mathf.CeilToInt((currentLevel / 20f)) * 20;
+
+            _uiDocument.rootVisualElement.Q<Label>("NextLabel").text = "Next Gold at Level " + nextGoldLevel;
         }
     }
 }
@@ -202,7 +247,7 @@ public class PrestigeUpgrade
                 currentValue = _currentLevel + 1;
                 World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(
                     new GlobalDataEventArgs{EventType = Field.SPEED, NewData = currentValue});
-                // TODO: Update balls with their new speed
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.AllBalls, true, -1, 0, "-1", -1);
                 break;
             case "BallPower":
                 currentValue = (int)Mathf.Pow(2, _currentLevel);

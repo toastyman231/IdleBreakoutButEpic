@@ -113,12 +113,17 @@ public class BallShopControl : MonoBehaviour
         {
             upgradeControl.OnUIShow();
         }
+        else
+        {
+            upgradeControl.OnUIHide();
+        }
     }
 
     private void Start()
     {
         World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.
             Enqueue(new GlobalDataEventArgs{EventType = Field.BALLS, NewData = 10 * PlayerPrefs.GetInt("MaxBallsLevel", 0) + 50});
+        PrestigeShopControl.PrestigeEvent += ResetBallPrices;
         //OnBallUpdate(this, new EventData(BallType.BasicBall, 0));
     }
 
@@ -128,6 +133,7 @@ public class BallShopControl : MonoBehaviour
         IncreaseMoneyEvent -= UpdateMoneyText;
         BallUpdateEvent -= OnBallUpdate;
         LevelLoadEvent -= OnLevelLoad;
+        PrestigeShopControl.PrestigeEvent -= ResetBallPrices;
         
         _world.GetOrCreateSystem<GlobalDataUpdateSystem>().UpdateGlobalBallsEvent -= OnBallUpdate;
         
@@ -255,6 +261,7 @@ public class BallShopControl : MonoBehaviour
         
         Enum.TryParse<BallType>(ballType, out var result);
         if (!CanBuy(result, out var cost)) return;
+        Debug.Log("can buy");
 
         _moneySystem.Money = BigInteger.Subtract(_moneySystem.Money, cost);
         InvokeIncreaseMoneyEvent();
@@ -461,13 +468,47 @@ public class BallShopControl : MonoBehaviour
         _moneyText.text = _moneySystem.Money.NumberFormat();
     }
 
+    private void ResetBallPrices(object sender, EventArgs args)
+    {
+        foreach (var ballType in _ballTypes)
+        {
+            switch (ballType)
+            {
+                case "BasicBall":
+                    _buyButtons[0].text = "$25";
+                    break;
+                case "PlasmaBall":
+                    _buyButtons[1].text = "$200";
+                    break;
+                case "SniperBall":
+                    _buyButtons[2].text = "$1500";
+                    break;
+                case "ScatterBall":
+                    _buyButtons[3].text = "$10000";
+                    break;
+                case "Cannonball":
+                    _buyButtons[4].text = "$75000";
+                    break;
+                case "PoisonBall":
+                    _buyButtons[5].text = "$75000";
+                    break;
+                default:
+                    Debug.Log("Error resetting ball prices");
+                    break;
+            }
+        }
+    }
+
     private void OnBallUpdate(object sender, EventData args)
     {
         Label ballText = _uiBar.Q<Label>("BallLabel");
         GlobalData globalData = _moneySystem.GetSingleton<GlobalData>();
-        int currentBalls = int.Parse(ballText.text.Substring(0, ballText.text.IndexOf("/")));
-        ballText.text = currentBalls + args.index + "/" + globalData.MaxBalls + "\nBalls";
-        ballText.style.color = currentBalls + args.index == globalData.MaxBalls ? new StyleColor(Color.red) : new StyleColor(Color.black);
+        EntityQuery ballQuery =
+            World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(ComponentType
+                .ReadOnly<BasicBallSharedData>());
+        int currentBalls = ballQuery.CalculateEntityCount(); //int.Parse(ballText.text.Substring(0, ballText.text.IndexOf("/")));
+        ballText.text = currentBalls /*+ args.index*/ + "/" + globalData.MaxBalls + "\nBalls";
+        ballText.style.color = currentBalls /*+ args.index*/ == globalData.MaxBalls ? new StyleColor(Color.red) : new StyleColor(Color.black);
     }
     
     private void OnBallUpdate(object sender, GlobalDataEventClass args)

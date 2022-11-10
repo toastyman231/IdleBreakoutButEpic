@@ -32,6 +32,8 @@ public class UpgradeShopControl : MonoBehaviour
         _upgradeContainers = new List<VisualElement>();
         _uiDocument = GetComponent<UIDocument>();
 
+        PrestigeShopControl.PrestigeEvent += ResetUpgrades;
+
         _upgradesPanel = _uiDocument.rootVisualElement.Q<GroupBox>("BackgroundPanel").Q<GroupBox>("UpgradesPanel");
         
         _upgrades.Add("BasicSpeed", new Upgrade("Speed", BallType.BasicBall, 100, 2.0f, Field.SPEED, 1, 10));
@@ -73,7 +75,7 @@ public class UpgradeShopControl : MonoBehaviour
                 _buttons[key].RegisterCallback<ClickEvent, UpgradeEventData>(_upgrades[key].LevelUp, new UpgradeEventData(upgradeButton, upgradeLabel));
             }
         }
-        _upgrades.Add("ClickX", new Upgrade("ClickX", BallType.BasicBall, 50, 0.2f, Field.CLICKX, 1, int.MaxValue));
+        _upgrades.Add("ClickX", new Upgrade("ClickX", BallType.BasicBall, 50, 1.2f, Field.CLICKX, 1, int.MaxValue));
 
         _labels.Add("ClickX", _upgradesPanel.Q<GroupBox>("OtherUpgrades").Q<GroupBox>("ClickXUpgradeContainer").Q<Label>("UpgradeLabel"));
         _buttons.Add("ClickX", _upgradesPanel.Q<GroupBox>("OtherUpgrades").Q<GroupBox>("ClickXUpgradeContainer").Q<Button>("ClickXBuyButton"));
@@ -96,6 +98,7 @@ public class UpgradeShopControl : MonoBehaviour
     {
         _upgradeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
         _prestigeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
+        PrestigeShopControl.PrestigeEvent -= ResetUpgrades;
     }
 
     private void SwitchToPanel(ClickEvent evt, UIDocument document)
@@ -112,6 +115,10 @@ public class UpgradeShopControl : MonoBehaviour
         {
             OnUIShow();
         }
+        else
+        {
+            OnUIHide();
+        }
     }
 
     public void OnUIShow()
@@ -120,6 +127,8 @@ public class UpgradeShopControl : MonoBehaviour
         {
             ToggleUpgradeBox(upgradeBox.name.Substring(0, upgradeBox.name.IndexOf("Upgrade")), upgradeBox);
         }
+        
+        ToggleUpgradeBox("ClickX", _uiDocument.rootVisualElement.Q<GroupBox>("ClickXUpgradeContainer"));
     }
 
     public void OnUIHide()
@@ -132,6 +141,15 @@ public class UpgradeShopControl : MonoBehaviour
 
     private void ToggleUpgradeBox(string ballType, VisualElement upgradeBox)
     {
+        if (ballType == "ClickX")
+        {
+            _labels["ClickX"].text = _upgrades["ClickX"].Name + "\n" + _upgrades["ClickX"].GetCurrentLevel() +
+                                     " >> " + (_upgrades["ClickX"].GetCurrentLevel() +
+                                               _upgrades["ClickX"].GetStepSize());
+            _buttons["ClickX"].text = (_upgrades["ClickX"].GetCurrentLevel() == _upgrades["ClickX"].GetMaxLevel()) ? "SOLD OUT" : "$" + _upgrades["ClickX"].GetCost().NumberFormat();
+            return;
+        }
+        
         EntityQuery entityQuery;
         switch (ballType)
         {
@@ -171,21 +189,46 @@ public class UpgradeShopControl : MonoBehaviour
         }
 
         upgradeBox.visible = entityQuery.CalculateEntityCount() > 0;
+        if (!upgradeBox.visible) return;
+
+        foreach (var element in upgradeBox.Children())
+        {
+            if (element.name.Contains("Upgrade"))
+            {
+                string key = element.name.Substring(0, element.name.IndexOf("Upgrade"));
+
+                element.Q<Label>("UpgradeLabel").text = _upgrades[key].Name + "\n" + _upgrades[key].GetCurrentLevel() +
+                                                        " >> " + (_upgrades[key].GetCurrentLevel() +
+                                                                  _upgrades[key].GetStepSize());
+                element.Q<Button>().text = (_upgrades[key].GetCurrentLevel() == _upgrades[key].GetMaxLevel()) ? "SOLD OUT" : "$" + _upgrades[key].GetCost().NumberFormat();
+            }
+        }
+    }
+
+    private void ResetUpgrades(object sender, EventArgs args)
+    {
+        foreach (KeyValuePair<string, Upgrade> upgrade in _upgrades)
+        {
+            upgrade.Value.Reset();
+        }
     }
 }
 
 public record UpgradeEventData(Button button, Label label);
 
-public struct Upgrade
+public class Upgrade
 {
     private static Dictionary<string, int> _numUpgrades;
     
-    private readonly string _name;
+    public string Name { get; }
+
     private readonly BallType _ballType;
     private BigInteger _cost;
+    private readonly BigInteger _initialCost;
     private readonly float _increaseAmount;
     private readonly Field _stat;
     private int _currentLevel;
+    private readonly int _startLevel;
     private readonly int _maxLevel;
     private readonly int _stepSize;
 
@@ -193,12 +236,14 @@ public struct Upgrade
 
     public Upgrade(string name, BallType ballType, int cost, float increaseAmount, Field stat, int startLevel, int maxLevel, int stepSize = 1)
     {
-        _name = name;
+        Name = name;
         _ballType = ballType;
         _cost = new BigInteger(cost);
+        _initialCost = _cost;
         _increaseAmount = increaseAmount;
         _stat = stat;
         _currentLevel = startLevel;
+        _startLevel = startLevel;
         _maxLevel = maxLevel;
         _world = World.DefaultGameObjectInjectionWorld;
         _stepSize = stepSize;
@@ -207,12 +252,23 @@ public struct Upgrade
         _numUpgrades.TryAdd(_ballType + name, 0);
     }
 
+    public void Reset()
+    {
+        _cost = _initialCost;
+        _currentLevel = _startLevel;
+        _numUpgrades.Clear();
+        _numUpgrades.TryAdd(_ballType + Name, 0);
+    }
+
     public void LevelUp(ClickEvent evt, UpgradeEventData data)
     {
         if (CanBuy())
         {
+            _world.GetOrCreateSystem<MoneySystem>().Money = BigInteger.Subtract(_world.GetOrCreateSystem<MoneySystem>().Money, _cost);
+            BallShopControl.InvokeIncreaseMoneyEvent();
+            
             _currentLevel += _stepSize;
-            _numUpgrades[_ballType + _name] += 1;
+            _numUpgrades[_ballType + Name] += 1;
 
             if (_ballType == BallType.PlasmaBall)
             {
@@ -222,7 +278,7 @@ public struct Upgrade
                 var plasmaBalls = plasmaBallQuery.ToEntityArray(Allocator.Temp);
                 int newSpeed = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(plasmaBalls[^1]).Speed;
                 
-                newSpeed = Mathf.CeilToInt(newSpeed * (0.9f / _numUpgrades[_ballType + _name]));
+                newSpeed = Mathf.CeilToInt(newSpeed * (0.9f / _numUpgrades[_ballType + Name]));
                 _world.GetOrCreateSystem<BallSharedDataUpdateSystem>()
                     .SetBallData(_ballType, false, -1, newSpeed, "-1", -1, -1);
             }
@@ -254,7 +310,7 @@ public struct Upgrade
 
             _cost = ReturnCostAsBigInteger(_cost, _increaseAmount);
 
-            data.label.text = _name + "\n" + _currentLevel + " >> " + (_currentLevel + _stepSize);
+            data.label.text = Name + "\n" + _currentLevel + " >> " + (_currentLevel + _stepSize);
             data.button.text = (_currentLevel == _maxLevel) ? "SOLD OUT" : "$" + _cost.NumberFormat();
         }
     }
@@ -333,5 +389,25 @@ public struct Upgrade
         _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
         BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
         onDelete();
+    }
+
+    public int GetCurrentLevel()
+    {
+        return _currentLevel;
+    }
+
+    public int GetStepSize()
+    {
+        return _stepSize;
+    }
+
+    public int GetMaxLevel()
+    {
+        return _maxLevel;
+    }
+
+    public BigInteger GetCost()
+    {
+        return _cost;
     }
 }

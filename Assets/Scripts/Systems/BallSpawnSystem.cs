@@ -345,7 +345,8 @@ public enum BallType
     ScatterBall = 3,
     Cannonball = 4,
     PoisonBall = 5,
-    ScatterChild = 6
+    ScatterChild = 6,
+    AllBalls = 7
 }
 
 public class SpawnEventArgsClass : EventArgs

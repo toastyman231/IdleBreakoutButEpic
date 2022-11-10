@@ -102,6 +102,24 @@ public partial class GlobalDataUpdateSystem : SystemBase
         {
             globalData.CurrentLevel = args.NewData;
         }).WithoutBurst().Run();
+
+        GlobalData globalData = GetSingleton<GlobalData>();
+        
+        if ((globalData.CurrentLevel) == World.GetOrCreateSystem<MoneySystem>().NextGoldIncrease)
+        {
+            World.GetOrCreateSystem<MoneySystem>().GoldStep++;
+            World.GetOrCreateSystem<MoneySystem>().NextGoldIncrease = BigInteger.Pow(10, (int) World.GetOrCreateSystem<MoneySystem>().GoldStep);
+        }
+            
+        if ((globalData.CurrentLevel) % 20 == 0)
+        {
+            World.GetOrCreateSystem<LevelControlSystem>().LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/GoldBrick").positions);
+            return;
+        }
+
+        int levelToLoad = globalData.CurrentLevel % World.GetOrCreateSystem<LevelControlSystem>().NumLevels;
+        if (levelToLoad == 0) levelToLoad = 10;
+        World.GetOrCreateSystem<LevelControlSystem>().LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/Level" + levelToLoad).positions);
     }
 
     private void UpdateGlobalMoney(object sender, GlobalDataEventClass args)
@@ -119,9 +137,9 @@ public partial class GlobalDataUpdateSystem : SystemBase
     {
         Entities.ForEach((ref GlobalData globalData) =>
         {
-            Debug.Log("Bricks before " + globalData.Bricks);
+            //Debug.Log("Bricks before " + globalData.Bricks);
             globalData.Bricks = args.NewData;
-            Debug.Log("Bricks after " + globalData.Bricks);
+            //Debug.Log("Bricks after " + globalData.Bricks);
         }).WithoutBurst().Run();
         World.GetOrCreateSystem<LevelControlSystem>().EventQueue.Enqueue(2);
     }

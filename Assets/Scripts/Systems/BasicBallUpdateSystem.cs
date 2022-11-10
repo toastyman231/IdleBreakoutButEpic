@@ -29,7 +29,7 @@ namespace Systems
             switch (type)
             {
                 default:
-                    ballDataJob = new SetBasicBallDataJob
+                    ballDataJob = new SetAllBallsJob
                     {
                         Update = update,
                         NewPower = (int) data[0],
@@ -40,6 +40,18 @@ namespace Systems
                         GlobalData = GetSingleton<GlobalData>()
                     }.ScheduleParallel();
                     break;
+                case BallType.BasicBall:
+                ballDataJob = new SetBasicBallDataJob
+                {
+                    Update = update,
+                    NewPower = (int) data[0],
+                    NewSpeed = (int) data[1],
+                    NewCost = (string) data[2],
+                    NewCount = (int) data[3],
+                    DeltaTime = Time.DeltaTime,
+                    GlobalData = GetSingleton<GlobalData>()
+                }.ScheduleParallel();
+                break;
                 case BallType.PlasmaBall:
                     ballDataJob = new SetPlasmaBallDataJob
                     {
@@ -106,6 +118,49 @@ namespace Systems
 
             ballDataJob.Complete();
             //Debug.Log(GetSingleton<BasicBallSharedData>().Count);
+        }
+        
+        private partial struct SetAllBallsJob : IJobEntity
+        {
+            public float DeltaTime;
+            public GlobalData GlobalData;
+            public int NewPower;
+            public int NewSpeed;
+            public FixedString64Bytes NewCost;
+            public int NewCount;
+            public bool Update;
+            
+            //[BurstCompile]
+            void Execute(ref BasicBallSharedData ballSharedData, ref PhysicsVelocity pv)
+            {
+                if (Update)
+                {
+                    if (NewPower >= 0) ballSharedData.Power += NewPower;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed += NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
+                    if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0) 
+                        ballSharedData.Cost = BigInteger.Add(BigInteger.Parse(ballSharedData.Cost.ToString()), 
+                            BigInteger.Parse(NewCost.ToString())).ToString();
+                    if (NewCount >= 0) ballSharedData.Count += NewCount;
+                }
+                else
+                {
+                    if (NewPower >= 0) ballSharedData.Power = NewPower;
+                    if (NewSpeed >= 0)
+                    {
+                        float3 direction = math.normalize(pv.Linear);
+                        ballSharedData.Speed = NewSpeed;
+                        pv.Linear = direction * ballSharedData.Speed * GlobalData.SpeedScale * GlobalData.GlobalSpeed * DeltaTime;
+                    }
+                    if (BigInteger.Compare(BigInteger.Parse(NewCost.ToString()), BigInteger.Zero) >= 0)
+                        ballSharedData.Cost = NewCost;
+                    if (NewCount >= 0) ballSharedData.Count = NewCount;
+                }
+            }
         }
 
         //[BurstCompile]

@@ -10,12 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4ed9f31fe72c824f8c9661736f88033, type: 3}
-  m_Name: Level1
+  m_Name: GoldBrick
   m_EditorClassIdentifier: 
   positions:
-  - x: 9.72
-    y: 0
-    z: 10
-  - x: 6
-    y: 0
+  - x: 1
+    y: 4
     z: 10

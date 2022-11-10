@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -18,6 +19,7 @@ public partial class LevelControlSystem : SystemBase
     public NativeQueue<int> EventQueue;
 
     private NativeArray<FixedString32Bytes> _levels;
+    public int NumLevels;
 
     [BurstCompile]
     protected override void OnCreate()
@@ -25,8 +27,12 @@ public partial class LevelControlSystem : SystemBase
         base.OnCreate();
         EventQueue = new NativeQueue<int>(Allocator.Persistent);
         CheckLevelCompleteEvent += CheckLevelComplete;
-        _levels = new NativeArray<FixedString32Bytes>(1, Allocator.Persistent);
-        _levels[0] = "Level1";
+        _levels = new NativeArray<FixedString32Bytes>(10, Allocator.Persistent);
+        NumLevels = _levels.Length;
+        for (int i = 0; i < 10; i++)
+        {
+            _levels[i] = "Level" + (i + 1);
+        }
     }
     
     [BurstCompile]
@@ -34,7 +40,7 @@ public partial class LevelControlSystem : SystemBase
     {
         base.OnStartRunning();
         // TODO: Make more levels
-        //World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(new GlobalDataEventArgs{ EventType = Field.LEVEL, NewData = 10 });
+        //World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.Enqueue(new GlobalDataEventArgs{ EventType = Field.LEVEL, NewData = 19 });
         LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/Level1").positions);
     }
 
@@ -69,23 +75,28 @@ public partial class LevelControlSystem : SystemBase
             globalDataUpdate.EventQueue.Enqueue(new GlobalDataEventArgs{EventType = Field.LEVEL, NewData = globalData.CurrentLevel + 1});
             BallShopControl.InvokeLevelLoadEvent();
             //Debug.Log("Level to load: " + (globalData.CurrentLevel + 1) % _levels.Length);
-            LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/" + _levels[(globalData.CurrentLevel + 1) % _levels.Length]).positions);
+            //Debug.Log("1 Level: " + globalData.CurrentLevel);
         }
     }
     
     [BurstCompile]
     public void LoadLevel(float3[] brickPositions)
     {
-        var prefab = GetSingleton<PrefabComponent>().BrickPrefab;
         var globalData = GetSingleton<GlobalData>();
+        //Debug.Log("2 Level: " + globalData.CurrentLevel);
+        var prefab = ((globalData.CurrentLevel) % 20 == 0) ? GetSingleton<PrefabComponent>().GoldBrickPrefab : GetSingleton<PrefabComponent>().BrickPrefab;
 
         foreach (var position in brickPositions)
         {
             Entity entity = EntityManager.Instantiate(prefab);
             EntityManager.SetComponentData<Translation>(entity, new Translation{Value = position});
+            int health = 0;
+            if ((globalData.CurrentLevel) % 20 == 0) health = (globalData.CurrentLevel + 1) * 100;
+            else if ((globalData.CurrentLevel) >= 1000) health = globalData.CurrentLevel * 2;
+            else health = globalData.CurrentLevel;
             EntityManager.SetComponentData<BrickData>(entity, new BrickData
             {
-                Health = globalData.CurrentLevel,
+                Health = health,
                 Position = position
             });
             EntityManager.AddComponent<DoneSetupTag>(entity);
