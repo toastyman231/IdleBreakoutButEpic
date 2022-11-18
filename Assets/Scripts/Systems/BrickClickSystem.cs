@@ -20,13 +20,14 @@ public partial class BrickClickSystem : SystemBase
     private GlobalData _globalData;
     private NativeQueue<GlobalDataEventArgs>.ParallelWriter _globalDataEventQueue;
     private NativeQueue<int>.ParallelWriter _levelOverEventQueue;
+    private NativeQueue<TextEventData>.ParallelWriter _textEventQueue;
 
     [BurstCompile]
     protected override void OnCreate()
     {
         base.OnCreate();
         CanClick = true;
-        _mainCamera = Camera.main;
+        //_mainCamera = Camera.main;
         _buildPhysicsWorld = World.GetOrCreateSystem<BuildPhysicsWorld>();
     }
     
@@ -35,6 +36,7 @@ public partial class BrickClickSystem : SystemBase
     {
         base.OnStartRunning();
         _globalData = GetSingleton<GlobalData>();
+        _mainCamera = Camera.main;
     }
     
     [BurstCompile]
@@ -56,6 +58,7 @@ public partial class BrickClickSystem : SystemBase
         _globalData = GetSingleton<GlobalData>();
         _globalDataEventQueue = World.GetOrCreateSystem<GlobalDataUpdateSystem>().EventQueue.AsParallelWriter();
         _levelOverEventQueue = World.GetOrCreateSystem<LevelControlSystem>().EventQueue.AsParallelWriter();
+        _textEventQueue = BrickTextControl.Instance.EventQueue.AsParallelWriter();
 
         var ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
         var rayStart = ray.origin;
@@ -75,8 +78,11 @@ public partial class BrickClickSystem : SystemBase
                 int newHealth = brickData.Health - damage;
                 EntityManager.SetComponentData<BrickData>(hitEntity, new BrickData{Health = newHealth, Position = brickData.Position, Poisoned = brickData.Poisoned});
                 
+                _textEventQueue.Enqueue(new TextEventData{Delete = false, Update = true, Position = brickData.Position, Text = newHealth});
+                
                 if (newHealth <= 0)
                 {
+                    _textEventQueue.Enqueue(new TextEventData{Delete = true, Update = false, Position = brickData.Position, Text = newHealth});
                     EntityManager.DestroyEntity(hitEntity);
 
                     if (_globalData.CurrentLevel % 20 == 0)

@@ -22,6 +22,7 @@ public class BallShopControl : MonoBehaviour
 
     private Dictionary<string, string> _ballTypeLookup;
     private Button[] _buyButtons;
+    private Stack<string>[] _ballPrices;
     private Button _upgradeButton;
     private Button _prestigeButton;
     private VisualElement[] _hoverElements;
@@ -44,7 +45,7 @@ public class BallShopControl : MonoBehaviour
         _uiDocument = GetComponent<UIDocument>();
         _moneySystem = _world.GetOrCreateSystem<MoneySystem>();
         _dataQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<GlobalData>());
-        _ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<BasicBallSharedData>());
+        _ballQuery = _world.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<BasicBallSharedData>(), ComponentType.Exclude<ScatterChildTag>());
         _world.GetOrCreateSystem<GlobalDataUpdateSystem>().UpdateGlobalBallsEvent += OnBallUpdate;
         IncreaseMoneyEvent += UpdateButtons;
         IncreaseMoneyEvent += UpdateMoneyText;
@@ -56,12 +57,14 @@ public class BallShopControl : MonoBehaviour
         
         _ballTypes = new [] { "BasicBall", "PlasmaBall", "SniperBall", "ScatterBall", "Cannonball", "PoisonBall" };
         _buyButtons = new Button[_uiDocument.rootVisualElement.Q("BallButtons").childCount];
+        _ballPrices = new Stack<string>[_buyButtons.Length];
         _hoverElements = new VisualElement[_buyButtons.Length];
         _uiBar = _uiDocument.rootVisualElement.ElementAt(0);
         _moneyText = _uiBar.Q<GroupBox>("MoneyDisplayContainer").Q<Label>("MoneyText");
 
         for (int i = 0; i < _buyButtons.Length; i++)
         {
+            _ballPrices[i] = new Stack<string>();
             _buyButtons[i] = _uiBar.Q<GroupBox>("BallButtons").Q<GroupBox>("Buy" + _ballTypes[i] + "Group")
                 .Q<Button>("Buy" + _ballTypes[i] + "Button");
             _hoverElements[i] = _uiDocument.rootVisualElement.Q<GroupBox>("HoverGroup")
@@ -79,6 +82,13 @@ public class BallShopControl : MonoBehaviour
                 _hoverElements[index].visible = false;
             });
         }
+        
+        _ballPrices[0].Push("25");
+        _ballPrices[1].Push("200");
+        _ballPrices[2].Push("1500");
+        _ballPrices[3].Push("10000");
+        _ballPrices[4].Push("75000");
+        _ballPrices[5].Push("75000");
 
         _upgradeButton = _uiBar.Q<GroupBox>("StoreButtonsContainer").Q<Button>("UpgradesButton");
         _upgradeButton.RegisterCallback<ClickEvent, UIDocument>(SwitchToPanel, upgradeDocument);
@@ -159,88 +169,25 @@ public class BallShopControl : MonoBehaviour
             
         }
 
-        BasicBallSharedData ballData;
-
         switch (type)
         {
             case BallType.BasicBall:
-                try
-                {
-                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
-                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<BallTag>())
-                            .ToEntityArray(Allocator.Temp)[0]);
-                    cost = BigInteger.Parse(ballData.Cost.ToString());
-                }
-                catch
-                {
-                    cost = BigInteger.Parse(_buyButtons[0].text.Substring(1));
-                }
+                cost = BigInteger.Parse(_ballPrices[0].Peek());
                 break;
             case BallType.PlasmaBall:
-                try
-                {
-                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
-                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlasmaTag>())
-                            .ToEntityArray(Allocator.Temp)[0]);
-                    cost = BigInteger.Parse(ballData.Cost.ToString());
-                }
-                catch
-                {
-                    cost = BigInteger.Parse(_buyButtons[1].text.Substring(1));
-                }
+                cost = BigInteger.Parse(_ballPrices[1].Peek());
                 break;
             case BallType.SniperBall:
-                try
-                {
-                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
-                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<SniperTag>())
-                            .ToEntityArray(Allocator.Temp)[0]);
-                    cost = BigInteger.Parse(ballData.Cost.ToString());
-                }
-                catch
-                {
-                    cost = BigInteger.Parse(_buyButtons[2].text.Substring(1));
-                }
+                cost = BigInteger.Parse(_ballPrices[2].Peek());
                 break;
             case BallType.ScatterBall:
-                try
-                {
-                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
-                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ScatterTag>())
-                            .ToEntityArray(Allocator.Temp)[0]);
-                    cost = BigInteger.Parse(ballData.Cost.ToString());
-                }
-                catch
-                {
-                    cost = BigInteger.Parse(_buyButtons[3].text.Substring(1));
-                }
+                cost = BigInteger.Parse(_ballPrices[3].Peek());
                 break;
             case BallType.Cannonball:
-                try
-                {
-                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
-                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<CannonballTag>())
-                            .ToEntityArray(Allocator.Temp)[0]);
-                    cost = BigInteger.Parse(ballData.Cost.ToString());
-                }
-                catch
-                {
-                    Debug.Log(_buyButtons[4].text.Substring(1));
-                    cost = BigInteger.Parse(_buyButtons[4].text.Substring(1));
-                }
+                cost = BigInteger.Parse(_ballPrices[4].Peek());
                 break;
             case BallType.PoisonBall:
-                try
-                {
-                    ballData = _world.EntityManager.GetComponentData<BasicBallSharedData>(
-                        _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PoisonTag>())
-                            .ToEntityArray(Allocator.Temp)[0]);
-                    cost = BigInteger.Parse(ballData.Cost.ToString());
-                }
-                catch
-                {
-                    cost = BigInteger.Parse(_buyButtons[5].text.Substring(1));
-                }
+                cost = BigInteger.Parse(_ballPrices[5].Peek());
                 break;
         }
 
@@ -261,7 +208,8 @@ public class BallShopControl : MonoBehaviour
         
         Enum.TryParse<BallType>(ballType, out var result);
         if (!CanBuy(result, out var cost)) return;
-        Debug.Log("can buy");
+        //Debug.Log("can buy");
+        Debug.Log("Cost: " + cost);
 
         _moneySystem.Money = BigInteger.Subtract(_moneySystem.Money, cost);
         InvokeIncreaseMoneyEvent();
@@ -333,6 +281,7 @@ public class BallShopControl : MonoBehaviour
                 cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(basicBalls[^1]).Cost.ToString();
                 newCost = BigInteger.Add(BigInteger.Parse(cost),
                     ReturnCostAsBigInteger(BigInteger.Parse(cost), 0.5f));
+                _ballPrices[0].Push(newCost.ToString());
                 _buyButtons[0].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.BasicBall, false, -1, -1, newCost.ToString(), -1);
             case "PlasmaBall":
@@ -342,6 +291,7 @@ public class BallShopControl : MonoBehaviour
                 cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(plasmaBalls[^1]).Cost.ToString();
                 newCost = BigInteger.Add(BigInteger.Parse(cost),
                     ReturnCostAsBigInteger(BigInteger.Parse(cost), 0.4f));
+                _ballPrices[1].Push(newCost.ToString());
                 _buyButtons[1].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.PlasmaBall, false, -1, -1, newCost.ToString(), -1, -1);
             case "SniperBall":
@@ -350,6 +300,7 @@ public class BallShopControl : MonoBehaviour
                 var sniperBalls = sniperBallQuery.ToEntityArray(Allocator.Temp);
                 cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(sniperBalls[^1]).Cost.ToString();
                 newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.35f);
+                _ballPrices[2].Push(newCost.ToString());
                 _buyButtons[2].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.SniperBall, false, -1, -1, newCost.ToString(), -1);
             case "ScatterBall":
@@ -358,6 +309,7 @@ public class BallShopControl : MonoBehaviour
                 var scatterBalls = scatterBallQuery.ToEntityArray(Allocator.Temp);
                 cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(scatterBalls[^1]).Cost.ToString();
                 newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.35f);
+                _ballPrices[3].Push(newCost.ToString());
                 _buyButtons[3].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.ScatterBall, false, -1, -1, newCost.ToString(), -1, -1);
             case "Cannonball":
@@ -366,6 +318,7 @@ public class BallShopControl : MonoBehaviour
                 var cannonballs = cannonballQuery.ToEntityArray(Allocator.Temp);
                 cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(cannonballs[^1]).Cost.ToString();
                 newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.3f);
+                _ballPrices[4].Push(newCost.ToString());
                 _buyButtons[4].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.Cannonball, false, -1, -1, newCost.ToString(), -1);
             case "PoisonBall":
@@ -374,6 +327,7 @@ public class BallShopControl : MonoBehaviour
                 var poisonBalls = poisonBallQuery.ToEntityArray(Allocator.Temp);
                 cost = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<BasicBallSharedData>(poisonBalls[^1]).Cost.ToString();
                 newCost = ReturnCostAsBigInteger(BigInteger.Parse(cost), 1.25f);
+                _ballPrices[5].Push(newCost.ToString());
                 _buyButtons[5].text = "$" + newCost.NumberFormat();
                 return () => _world.GetOrCreateSystem<BallSharedDataUpdateSystem>().SetBallData(BallType.PoisonBall, false, -1, -1, newCost.ToString(), -1);
             default:
@@ -381,11 +335,11 @@ public class BallShopControl : MonoBehaviour
         }
     }
 
-    private BigInteger ReturnCostAsBigInteger(BigInteger cost, float mult)
+    private BigInteger ReturnCostAsBigInteger(BigInteger cost, double mult)
     {
-        float dCost = (float)cost;
-        int result = Mathf.CeilToInt(dCost * mult);
-        return new BigInteger(result);
+        double dCost = (double)cost;
+        BigInteger result = new BigInteger(Math.Ceiling(dCost * mult));//Mathf.CeilToInt(dCost * mult);
+        return result;
     }
 
     private void UpdateTooltip(MouseOverEvent evt, EventData data)
@@ -444,6 +398,14 @@ public class BallShopControl : MonoBehaviour
     void Update()
     {
         //_moneyText.text = _moneySystem.Money.NumberFormat();
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+            #else
+            Application.Quit();
+            #endif
+        }
         
         if (_costIncreases.Count > 0)
         {
@@ -475,21 +437,33 @@ public class BallShopControl : MonoBehaviour
             switch (ballType)
             {
                 case "BasicBall":
+                    _ballPrices[0].Clear();
+                    _ballPrices[0].Push("25");
                     _buyButtons[0].text = "$25";
                     break;
                 case "PlasmaBall":
+                    _ballPrices[1].Clear();
+                    _ballPrices[1].Push("200");
                     _buyButtons[1].text = "$200";
                     break;
                 case "SniperBall":
+                    _ballPrices[2].Clear();
+                    _ballPrices[2].Push("1500");
                     _buyButtons[2].text = "$1500";
                     break;
                 case "ScatterBall":
+                    _ballPrices[3].Clear();
+                    _ballPrices[3].Push("10000");
                     _buyButtons[3].text = "$10000";
                     break;
                 case "Cannonball":
+                    _ballPrices[4].Clear();
+                    _ballPrices[4].Push("75000");
                     _buyButtons[4].text = "$75000";
                     break;
                 case "PoisonBall":
+                    _ballPrices[5].Clear();
+                    _ballPrices[5].Push("75000");
                     _buyButtons[5].text = "$75000";
                     break;
                 default:
@@ -499,14 +473,67 @@ public class BallShopControl : MonoBehaviour
         }
     }
 
+    public void ResetBall(string ballType)
+    {
+        switch (ballType)
+        {
+            case "BasicBall":
+                if (_ballPrices[0].Count > 1)
+                    _ballPrices[0].Pop();
+                _buyButtons[0].text = "$" + _ballPrices[0].Peek();
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                    .SetBallData(BallType.BasicBall, false, -1, -1, _ballPrices[0].Peek(), -1);
+                break;
+            case "PlasmaBall":
+                if (_ballPrices[1].Count > 1)
+                    _ballPrices[1].Pop();
+                _buyButtons[1].text = "$" + _ballPrices[1].Peek();
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                    .SetBallData(BallType.PlasmaBall, false, -1, -1, _ballPrices[1].Peek(), -1, -1);
+                break;
+            case "SniperBall":
+                if (_ballPrices[2].Count > 1)
+                    _ballPrices[2].Pop();
+                _buyButtons[2].text = "$" + _ballPrices[2].Peek();
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                    .SetBallData(BallType.SniperBall, false, -1, -1, _ballPrices[2].Peek(), -1);
+                break;
+            case "ScatterBall":
+                if (_ballPrices[3].Count > 1)
+                    _ballPrices[3].Pop();
+                _buyButtons[3].text = "$" + _ballPrices[3].Peek();
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                    .SetBallData(BallType.ScatterBall, false, -1, -1, _ballPrices[3].Peek(), -1, -1);
+                break;
+            case "Cannonball":
+                if (_ballPrices[4].Count > 1)
+                    _ballPrices[4].Pop();
+                _buyButtons[4].text = "$" + _ballPrices[4].Peek();
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                    .SetBallData(BallType.Cannonball, false, -1, -1, _ballPrices[4].Peek(), -1);
+                break;
+            case "PoisonBall":
+                if (_ballPrices[5].Count > 1)
+                    _ballPrices[5].Pop();
+                _buyButtons[5].text = "$" + _ballPrices[5].Peek();
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>()
+                    .SetBallData(BallType.PoisonBall, false, -1, -1, _ballPrices[5].Peek(), -1);
+                break;
+            default:
+                Debug.Log("Error resetting ball prices");
+                break;
+        }
+    }
+
     private void OnBallUpdate(object sender, EventData args)
     {
         Label ballText = _uiBar.Q<Label>("BallLabel");
         GlobalData globalData = _moneySystem.GetSingleton<GlobalData>();
         EntityQuery ballQuery =
             World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(ComponentType
-                .ReadOnly<BasicBallSharedData>());
-        int currentBalls = ballQuery.CalculateEntityCount(); //int.Parse(ballText.text.Substring(0, ballText.text.IndexOf("/")));
+                .ReadOnly<BasicBallSharedData>(), ComponentType.Exclude<ScatterChildTag>());
+        int currentBalls = ballQuery.CalculateEntityCount();
+        //int.Parse(ballText.text.Substring(0, ballText.text.IndexOf("/")));
         ballText.text = currentBalls /*+ args.index*/ + "/" + globalData.MaxBalls + "\nBalls";
         ballText.style.color = currentBalls /*+ args.index*/ == globalData.MaxBalls ? new StyleColor(Color.red) : new StyleColor(Color.black);
     }
@@ -525,7 +552,7 @@ public class BallShopControl : MonoBehaviour
         Label levelText = _uiBar.Q<VisualElement>("LevelContainer").Q<Label>("LevelText");
         GlobalData globalData = _moneySystem.GetSingleton<GlobalData>();
 
-        levelText.text = "Level\n" + (globalData.CurrentLevel + 1);
+        levelText.text = "Level\n" + (globalData.CurrentLevel); // + 1);
     }
 
     public static void InvokeIncreaseMoneyEvent()

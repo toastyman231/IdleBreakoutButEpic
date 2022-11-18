@@ -113,8 +113,8 @@ public class PrestigeShopControl : MonoBehaviour
 
         EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
         EntityQuery destroyQuery = manager.CreateEntityQuery(ComponentType.ReadOnly<BasicBallSharedData>());
-        EntityQuery destroyBricks = manager.CreateEntityQuery(ComponentType.ReadOnly<BrickTag>());
-        manager.DestroyEntity(destroyBricks);
+        //EntityQuery destroyBricks = manager.CreateEntityQuery(ComponentType.ReadOnly<BrickTag>());
+        //manager.DestroyEntity(destroyBricks);
         manager.DestroyEntity(destroyQuery);
         BallShopControl.InvokeBallUpdateEvent(BallType.BasicBall, 0);
         
@@ -138,6 +138,7 @@ public class PrestigeShopControl : MonoBehaviour
             SpeedScale = globalData.SpeedScale
         });
         
+        BallShopControl.InvokeLevelLoadEvent();
         World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<LevelControlSystem>().LoadLevel(Resources.Load<BrickPositionData>("Brick Layouts/Level1").positions);
         PrestigeEvent?.Invoke(this, EventArgs.Empty);
         

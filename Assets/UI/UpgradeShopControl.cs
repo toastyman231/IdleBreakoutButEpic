@@ -12,7 +12,10 @@ using UnityEngine.UIElements;
 public class UpgradeShopControl : MonoBehaviour
 {
     [SerializeField] private UIDocument prestigeDocument;
-    
+    [SerializeField] private BallShopControl ballShop;
+
+    public static event EventHandler<NewBallEventData> NewBallEvent; 
+
     private Dictionary<string, Label> _labels;
     private Dictionary<string, Upgrade> _upgrades;
     private Dictionary<string, Button> _buttons;
@@ -62,7 +65,7 @@ public class UpgradeShopControl : MonoBehaviour
                 {
                     string delKey = upgrade.name.Substring(0, upgrade.name.IndexOf("Delete"));
                     
-                    upgrade.RegisterCallback<ClickEvent, Action>(_upgrades[delKey].DeleteBall, OnUIShow);
+                    upgrade.RegisterCallback<ClickEvent, Action<string>>(_upgrades[delKey].DeleteBall, OnDelete);
                     continue;
                 }
                 
@@ -92,12 +95,14 @@ public class UpgradeShopControl : MonoBehaviour
         _prestigeButton = _uiDocument.rootVisualElement.Q<Button>("PrestigeTabButton");
         _upgradeButton.RegisterCallback<ClickEvent, UIDocument>(SwitchToPanel, _uiDocument);
         _prestigeButton.RegisterCallback<ClickEvent, UIDocument>(SwitchToPanel, prestigeDocument);
+        NewBallEvent += ReturnUpgrades;
     }
 
     private void OnDestroy()
     {
         _upgradeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
         _prestigeButton.UnregisterCallback<ClickEvent, UIDocument>(SwitchToPanel);
+        NewBallEvent -= ReturnUpgrades;
         PrestigeShopControl.PrestigeEvent -= ResetUpgrades;
     }
 
@@ -129,6 +134,12 @@ public class UpgradeShopControl : MonoBehaviour
         }
         
         ToggleUpgradeBox("ClickX", _uiDocument.rootVisualElement.Q<GroupBox>("ClickXUpgradeContainer"));
+    }
+
+    private void OnDelete(string ballType)
+    {
+        OnUIShow();
+        ballShop.ResetBall(ballType);
     }
 
     public void OnUIHide()
@@ -212,9 +223,50 @@ public class UpgradeShopControl : MonoBehaviour
             upgrade.Value.Reset();
         }
     }
+
+    private void ReturnUpgrades(object sender, NewBallEventData args)
+    {
+        if (args.ballType == "Plasma")
+        {
+            BallSharedDataUpdateSystem updateSystem =
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>();
+            Enum.TryParse<BallType>(args.ballType + "Ball", out var result);
+            updateSystem.SetBallData(result, false, _upgrades[args.ballType + "Power"].GetCurrentLevel(), 
+                -1, "-1", args.newAmount, _upgrades[args.ballType + "Range"].GetCurrentLevel());
+        } else if (args.ballType == "Scatter")
+        {
+            BallSharedDataUpdateSystem updateSystem =
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>();
+            Enum.TryParse<BallType>(args.ballType + "Ball", out var result);
+            updateSystem.SetBallData(result, false, _upgrades[args.ballType + "Power"].GetCurrentLevel(), 
+                -1, "-1", args.newAmount, _upgrades[args.ballType + "ExtraBalls"].GetCurrentLevel());
+        } else if (args.ballType == "Cannonball")
+        {
+            BallSharedDataUpdateSystem updateSystem =
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>();
+            Enum.TryParse<BallType>(args.ballType, out var result);
+            updateSystem.SetBallData(result, false, _upgrades[args.ballType + "Power"].GetCurrentLevel(), 
+                _upgrades[args.ballType + "Speed"].GetCurrentLevel(), "-1", args.newAmount);
+        }
+        else
+        {
+            BallSharedDataUpdateSystem updateSystem =
+                World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BallSharedDataUpdateSystem>();
+            Enum.TryParse<BallType>(args.ballType + "Ball", out var result);
+            updateSystem.SetBallData(result, false, _upgrades[args.ballType + "Power"].GetCurrentLevel(), 
+                _upgrades[args.ballType + "Speed"].GetCurrentLevel(), "-1", args.newAmount);
+        }
+    }
+
+    public static void InvokeNewBallEvent(string ballType, int newAmount)
+    {
+        NewBallEvent?.Invoke(null, new NewBallEventData(ballType, newAmount));
+    }
 }
 
 public record UpgradeEventData(Button button, Label label);
+
+public record NewBallEventData(string ballType, int newAmount);
 
 public class Upgrade
 {
@@ -327,17 +379,18 @@ public class Upgrade
         return new BigInteger(result);
     }
 
-    public void DeleteBall(ClickEvent evt, Action onDelete)
+    public void DeleteBall(ClickEvent evt, Action<string> onDelete)
     {
         EntityQuery query;
         int count = 0;
-        
+
         switch (_ballType)
         {
             case BallType.BasicBall:
                 query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<BallTag>());
                 count = query.CalculateEntityCount();
                 if (count == 0) return;
+                //onDelete("BasicBall");
                 break;
             case BallType.PlasmaBall:
                 query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlasmaTag>());
@@ -348,7 +401,7 @@ public class Upgrade
                     .SetBallData(_ballType, false, -1, -1, "-1", count - 1, -1);
                 _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
                 BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
-                onDelete();
+                onDelete("PlasmaBall");
                 return;
             case BallType.SniperBall:
                 query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<SniperTag>());
@@ -365,19 +418,19 @@ public class Upgrade
                     .SetBallData(_ballType, false, -1, -1, "-1", count - 1, -1);
                 _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
                 BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
-                onDelete();
+                onDelete("ScatterBall");
                 return;
             case BallType.Cannonball:
                 query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<CannonballTag>());
                 count = query.CalculateEntityCount();
                 if (count == 0) return;
-
+                //onDelete("Cannonball");
                 break;
             case BallType.PoisonBall:
                 query = _world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PoisonTag>());
                 count = query.CalculateEntityCount();
                 if (count == 0) return;
-
+                //onDelete("PoisonBall");
                 break;
             default:
                 Debug.Log("Error deleting ball!");
@@ -388,7 +441,7 @@ public class Upgrade
             .SetBallData(_ballType, false, -1, -1, "-1", count - 1);
         _world.EntityManager.DestroyEntity(query.ToEntityArray(Allocator.Temp)[0]);
         BallShopControl.InvokeBallUpdateEvent(_ballType, -1);
-        onDelete();
+        onDelete(_ballType.ToString());
     }
 
     public int GetCurrentLevel()

@@ -6,8 +6,10 @@ public static class Extensions
     public static string NumberFormat(this BigInteger num, bool countK = false)
     {
         // Ensure number has max 3 significant digits (no rounding up can happen)
-        BigInteger i = (BigInteger)System.Math.Pow(10, (int)System.Math.Max(0, BigInteger.Log10(num) - 3));
-        num = num / i * i;
+        if (num == BigInteger.Zero) return "0";
+        
+        BigInteger i = BigInteger.Pow(10, (int)BigInteger.Max(0, BigInteger.Subtract((BigInteger)BigInteger.Log10(num), 3)));
+        num = BigInteger.Multiply(BigInteger.Divide(num, i), i);
 
         if (num >= BigInteger.Parse("1000000000000000000000000000"))
             return (num / BigInteger.Parse("1000000000000000000000000000")).ToString("##0.##") + "OCT";

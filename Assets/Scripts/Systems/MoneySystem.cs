@@ -25,14 +25,13 @@ public partial class MoneySystem : SystemBase
         base.OnCreate();
         GoldStepEventQueue = new NativeQueue<int>(Allocator.Persistent);
         UpdateGoldStepEvent += UpdateGoldStep;
-        //TODO: This is for testing, remove this
         //9999999999990000000000000000
-        Money = BigInteger.Parse("50");
+        Money = BigInteger.Zero;
         Money += new BigInteger(PlayerPrefs.GetInt("prestiges", 0) * 50);
         GoldStep = 1;
         NextGoldIncrease = 30;
-        Gold = BigInteger.Parse("100");//BigInteger.Parse(PlayerPrefs.GetString("gold", "0"));
-        GoldToClaim = new BigInteger(20); //BigInteger.Zero;
+        Gold = BigInteger.Parse(PlayerPrefs.GetString("gold", "0"));
+        GoldToClaim = BigInteger.Zero;
     }
 
     protected override void OnUpdate()

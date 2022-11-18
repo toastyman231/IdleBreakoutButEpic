@@ -109,10 +109,7 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         EntityManager.Instantiate(_basicBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
-                        Entities.ForEach((ref BasicBallSharedData sharedData, in BallTag tag) =>
-                        {
-                            sharedData.Count += amount;
-                        }).ScheduleParallel();
+                        UpgradeShopControl.InvokeNewBallEvent("Basic", amount);
                     }
                     break;
                 case BallType.PlasmaBall:
@@ -140,10 +137,7 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         EntityManager.Instantiate(_plasmaBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
-                        Entities.ForEach((ref BasicBallSharedData sharedData, in PlasmaTag tag) =>
-                        {
-                            sharedData.Count = currentCount + amount;
-                        }).ScheduleParallel();
+                        UpgradeShopControl.InvokeNewBallEvent("Plasma", amount);
                     }
                     break;
                 case BallType.SniperBall:
@@ -169,10 +163,7 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         EntityManager.Instantiate(_sniperBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
-                        Entities.ForEach((ref BasicBallSharedData sharedData, in SniperTag tag) =>
-                        {
-                            sharedData.Count = currentCount + amount;
-                        }).ScheduleParallel();
+                        UpgradeShopControl.InvokeNewBallEvent("Sniper", amount);
                     }
                     break;
                 case BallType.ScatterBall:
@@ -200,10 +191,7 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         EntityManager.Instantiate(_scatterBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
-                        Entities.ForEach((ref BasicBallSharedData sharedData, in ScatterTag tag) =>
-                        {
-                            sharedData.Count = currentCount + amount;
-                        }).ScheduleParallel();
+                        UpgradeShopControl.InvokeNewBallEvent("Scatter", amount);
                     }
                     break;
                 case BallType.ScatterChild:
@@ -241,10 +229,7 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         EntityManager.Instantiate(_cannonballPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
-                        Entities.ForEach((ref BasicBallSharedData sharedData, in CannonballTag tag) =>
-                        {
-                            sharedData.Count += amount;
-                        }).ScheduleParallel();
+                        UpgradeShopControl.InvokeNewBallEvent("Cannonball", amount);
                     }
                     break;
                 case BallType.PoisonBall:
@@ -270,10 +255,7 @@ public partial class BallSpawnSystem : SystemBase
                     {
                         EntityManager.Instantiate(_posionBallPrefab, numToSpawn[i], Allocator.Temp);
                         int amount = numToSpawn[i];
-                        Entities.ForEach((ref BasicBallSharedData sharedData, in PoisonTag tag) =>
-                        {
-                            sharedData.Count += amount;
-                        }).ScheduleParallel();
+                        UpgradeShopControl.InvokeNewBallEvent("Poison", amount);
                     }
                     break;
                 default:

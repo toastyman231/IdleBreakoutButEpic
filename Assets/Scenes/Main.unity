@@ -429,13 +429,14 @@ GameObject:
   - component: {fileID: 236176826}
   - component: {fileID: 236176825}
   - component: {fileID: 236176829}
+  - component: {fileID: 236176830}
   m_Layer: 0
   m_Name: Boundary_Right Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &236176825
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -512,10 +513,10 @@ MonoBehaviour:
       m_Override: 0
       m_Value:
         Category00: 0
-        Category01: 1
+        Category01: 0
         Category02: 0
         Category03: 0
-        Category04: 0
+        Category04: 1
         Category05: 0
         Category06: 0
         Category07: 0
@@ -550,7 +551,7 @@ MonoBehaviour:
         Category01: 0
         Category02: 1
         Category03: 1
-        Category04: 1
+        Category04: 0
         Category05: 1
         Category06: 1
         Category07: 1
@@ -631,6 +632,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5f14648e1c118c48a6055ba22480098, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &236176830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 236176824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed82cb38fd4e5a549a6f5f4310c5f808, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Normal:
+    x: -1
+    y: 0
+    z: 0
 --- !u!1 &550263666
 GameObject:
   m_ObjectHideFlags: 0
@@ -970,13 +987,14 @@ GameObject:
   - component: {fileID: 773320182}
   - component: {fileID: 773320181}
   - component: {fileID: 773320185}
+  - component: {fileID: 773320186}
   m_Layer: 0
   m_Name: Boundary_Left Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &773320181
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1053,10 +1071,10 @@ MonoBehaviour:
       m_Override: 0
       m_Value:
         Category00: 0
-        Category01: 1
+        Category01: 0
         Category02: 0
         Category03: 0
-        Category04: 0
+        Category04: 1
         Category05: 0
         Category06: 0
         Category07: 0
@@ -1091,7 +1109,7 @@ MonoBehaviour:
         Category01: 0
         Category02: 1
         Category03: 1
-        Category04: 1
+        Category04: 0
         Category05: 1
         Category06: 1
         Category07: 1
@@ -1172,6 +1190,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5f14648e1c118c48a6055ba22480098, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &773320186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773320180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed82cb38fd4e5a549a6f5f4310c5f808, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Normal:
+    x: 1
+    y: 0
+    z: 0
 --- !u!1 &835406851
 GameObject:
   m_ObjectHideFlags: 0
@@ -1185,13 +1219,14 @@ GameObject:
   - component: {fileID: 835406853}
   - component: {fileID: 835406852}
   - component: {fileID: 835406856}
+  - component: {fileID: 835406857}
   m_Layer: 0
   m_Name: Boundary_Top Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &835406852
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1268,10 +1303,10 @@ MonoBehaviour:
       m_Override: 0
       m_Value:
         Category00: 0
-        Category01: 1
+        Category01: 0
         Category02: 0
         Category03: 0
-        Category04: 0
+        Category04: 1
         Category05: 0
         Category06: 0
         Category07: 0
@@ -1306,7 +1341,7 @@ MonoBehaviour:
         Category01: 0
         Category02: 1
         Category03: 1
-        Category04: 1
+        Category04: 0
         Category05: 1
         Category06: 1
         Category07: 1
@@ -1387,6 +1422,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5f14648e1c118c48a6055ba22480098, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &835406857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 835406851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed82cb38fd4e5a549a6f5f4310c5f808, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Normal:
+    x: 0
+    y: -1
+    z: 0
 --- !u!1 &1056945994
 GameObject:
   m_ObjectHideFlags: 0
@@ -2014,6 +2065,7 @@ GameObject:
   - component: {fileID: 1428564577}
   - component: {fileID: 1428564576}
   - component: {fileID: 1428564575}
+  - component: {fileID: 1428564578}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -2071,6 +2123,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1428564578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1428564574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe322837c390d9c4cb2e460aeb9a557f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textPrefab: {fileID: 6306606650460890261, guid: 4699798fb9461154e9edd7c0fe483edf,
+    type: 3}
 --- !u!1 &1544650535
 GameObject:
   m_ObjectHideFlags: 0
@@ -2084,13 +2150,14 @@ GameObject:
   - component: {fileID: 1544650537}
   - component: {fileID: 1544650536}
   - component: {fileID: 1544650540}
+  - component: {fileID: 1544650541}
   m_Layer: 0
   m_Name: Boundary_Bottom Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1544650536
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2167,10 +2234,10 @@ MonoBehaviour:
       m_Override: 0
       m_Value:
         Category00: 0
-        Category01: 1
+        Category01: 0
         Category02: 0
         Category03: 0
-        Category04: 0
+        Category04: 1
         Category05: 0
         Category06: 0
         Category07: 0
@@ -2205,7 +2272,7 @@ MonoBehaviour:
         Category01: 0
         Category02: 1
         Category03: 1
-        Category04: 1
+        Category04: 0
         Category05: 1
         Category06: 1
         Category07: 1
@@ -2286,6 +2353,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5f14648e1c118c48a6055ba22480098, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1544650541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1544650535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed82cb38fd4e5a549a6f5f4310c5f808, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Normal:
+    x: 0
+    y: 1
+    z: 0
 --- !u!1 &1724705298
 GameObject:
   m_ObjectHideFlags: 0
@@ -2422,6 +2505,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   prestigeDocument: {fileID: 1356929730}
+  ballShop: {fileID: 8921939}
 --- !u!1 &1860153800
 GameObject:
   m_ObjectHideFlags: 0
